@@ -6,15 +6,16 @@ import {
   fetchOverpass,
   DEFAULT_CORRIDOR_HALF_WIDTH_FT,
 } from '../osm/overpass';
-import { detectCrossings, detectWetlandCrossings, mergeCrossings } from '../osm/crossings';
+import { detectCrossings, detectWetlandCrossings, detectLeveeCrossings, mergeCrossings } from '../osm/crossings';
 import { NwiError, fetchNWI } from '../osm/nwi';
+import { NldError, fetchNLD } from '../osm/nld';
 import { OsmError } from '../osm/types';
 import type { Crossing, CrossingKind } from '../osm/types';
 import { formatStation } from '../lib/format';
 import EmptyState, { PanelSection } from './EmptyState';
 import { kindColor } from './CrossingMarkers';
 
-const KINDS: CrossingKind[] = ['road', 'rail', 'water', 'building', 'utility', 'wetland'];
+const KINDS: CrossingKind[] = ['road', 'rail', 'water', 'building', 'utility', 'wetland', 'levee'];
 
 export default function CrossingsTab() {
   const { state, setCrossings, clearCrossings } = useProject();
@@ -27,7 +28,7 @@ export default function CrossingsTab() {
     return (
       <EmptyState
         title="No crossings yet"
-        hint="Import a KMZ to begin, then detect crossings from OpenStreetMap and NWI wetlands."
+        hint="Import a KMZ to begin, then detect crossings from OpenStreetMap, NWI wetlands, and NLD levees."
       />
     );
   }
@@ -50,10 +51,11 @@ export default function CrossingsTab() {
       }
       const stations = state.alignment!.stations;
       const poly = corridorPolyFilter(stations, hw);
-      // Query both sources in parallel; one may fail while the other succeeds.
-      const [osmSettled, nwiSettled] = await Promise.allSettled([
+      // Query all sources in parallel; one may fail while the others succeed.
+      const [osmSettled, nwiSettled, nldSettled] = await Promise.allSettled([
         fetchOverpass(buildOverpassQuery(poly)),
         fetchNWI(stations, hw),
+        fetchNLD(stations, hw),
       ]);
       const lists: Crossing[][] = [];
       const failures: string[] = [];
@@ -73,6 +75,14 @@ export default function CrossingsTab() {
           `NWI wetlands: ${e instanceof NwiError ? `(${e.code}) ${e.message}` : String(e)}`,
         );
       }
+      if (nldSettled.status === 'fulfilled') {
+        lists.push(detectLeveeCrossings(nldSettled.value, stations));
+      } else {
+        const e = nldSettled.reason;
+        failures.push(
+          `NLD levees: ${e instanceof NldError ? `(${e.code}) ${e.message}` : String(e)}`,
+        );
+      }
       if (lists.length === 0) {
         throw new Error(failures.join(' '));
       }
@@ -82,7 +92,7 @@ export default function CrossingsTab() {
       setCrossings(mergeCrossings(lists).filter((c) => kinds.has(c.kind)));
     } catch (e) {
       setError(
-        e instanceof OsmError || e instanceof NwiError
+        e instanceof OsmError || e instanceof NwiError || e instanceof NldError
           ? `(${e.code}) ${e.message}`
           : `Detection failed: ${e instanceof Error ? e.message : String(e)}`,
       );
@@ -121,7 +131,7 @@ export default function CrossingsTab() {
           onClick={detect}
           className="w-full rounded bg-indigo-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-wait disabled:bg-gray-400"
         >
-          {loading ? 'Querying Overpass…' : 'Detect crossings'}
+          {loading ? 'Querying sources…' : 'Detect crossings'}
         </button>
         {error && (
           <div className="mt-2 rounded border border-red-300 bg-red-50 p-2 text-[11px] text-red-800">
@@ -136,6 +146,10 @@ export default function CrossingsTab() {
         <p className="mt-1 text-[11px] text-gray-500">
           NWI wetlands are screening data (1:12,000 aerial imagery), not a legal or
           jurisdictional determination — field delineation governs. NWI-derived — field verify.
+        </p>
+        <p className="mt-1 text-[11px] text-gray-500">
+          NLD is a national inventory, not a jurisdictional determination — a levee
+          crossing may require USACE Section 408 permission. NLD-derived — field verify.
         </p>
       </PanelSection>
 

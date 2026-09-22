@@ -14,6 +14,7 @@ import type { Station } from '../geo/types';
 import { projectToAlignment } from '../geotech/borings';
 import type { Crossing, CrossingKind, OverpassElement } from './types';
 import type { NWIFeature } from './nwi';
+import type { NLDLine } from './nld';
 
 /** Station window for merging duplicate ways (dual carriageways, split ways). */
 export const DEDUPE_WINDOW_FT = 100;
@@ -130,6 +131,39 @@ export function detectWetlandCrossings(
       lat: hit.lat,
       lon: hit.lon,
       osmType: 'nwi',
+      osmId: f.objectId,
+    });
+  }
+  found.sort((a, b) => a.stationFt - b.stationFt);
+  return found;
+}
+
+/**
+ * Detect levee crossings from NLD embankment polylines: first (lowest-station)
+ * alignment intersection per feature — same treatment as roads. Sorted by
+ * station; dedupe (100 ft, same kind+name) is left to mergeCrossings.
+ */
+export function detectLeveeCrossings(lines: NLDLine[], stations: Station[]): Crossing[] {
+  const align = alignmentLine(stations);
+  const found: Crossing[] = [];
+  for (const f of lines) {
+    let hit: { lat: number; lon: number; stationFt: number; offsetFt: number } | null = null;
+    for (const line of f.lines) {
+      hit = firstLineHit(line, align, stations);
+      if (hit) break;
+    }
+    if (!hit) continue;
+    const name = f.segmentName || f.systemName || 'levee segment';
+    found.push({
+      id: `nld/${f.objectId}`,
+      kind: 'levee',
+      name,
+      detail: `NLD ${f.systemName || 'unknown system'} · seg ${f.segmentId || f.objectId} — field verify`,
+      stationFt: hit.stationFt,
+      offsetFt: hit.offsetFt,
+      lat: hit.lat,
+      lon: hit.lon,
+      osmType: 'nld',
       osmId: f.objectId,
     });
   }

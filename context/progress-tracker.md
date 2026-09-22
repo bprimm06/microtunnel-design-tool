@@ -3,7 +3,7 @@
 > The ONLY dynamic context file. Update at unit start and unit end. This is the
 > project's memory between sessions.
 
-## Status: context drafted — 2026-09-22
+## Status: U16 done — 2026-09-22 (NLD levees as a crossing kind)
 Six context files + project AGENTS.md written. Build has not started.
 
 **Update 2026-09-22:** User has an existing self-built HTML version of the tool (engine
@@ -144,3 +144,17 @@ any new scaffolding. Awaiting the HTML file from the user.
   `www.fws.gov/wetlands/arcgis/...` endpoint is dead — do not use. 10 new
   tests green. 116/116 tests total. Live-verified on the ConEdison alignment:
   11 road crossings, 0 wetlands (correct per direct service query), no errors.
+- [x] **U16 — NLD levees crossing kind:** done 2026-09-22 per
+  `specs/U16-levees-spec.md`. Detect crossings now queries the USACE National
+  Levee Database (ArcGIS Online FeatureServer `NLD2_PUBLIC_v1`, verified live)
+  layer 10 `Embankments` (levee centerline polylines) in parallel with Overpass
+  and NWI; embankments become station-referenced `levee` crossings
+  (name = SEGMENT_NAME, detail = NLD system + segment ID, amber markers,
+  filter checkbox). Old NLD hosts `maps.crrel.usace.army.mil` and
+  `levees.sec.usace.army.mil/arcgis` are dead — do not use. Layer 16
+  `Leveed_Areas` (protected-area polygons) intentionally not queried: being
+  inside a leveed area is not a levee crossing. Tab carries "NLD-derived —
+  field verify" plus the Section 408 note. 10 new tests green. 126/126 tests
+  total. Live-verified: ConEdison corridor returns 0 embankments (true zero,
+  confirmed by direct service query); Sacramento envelope returns 228 real
+  embankments through the actual `fetchNLD` module.

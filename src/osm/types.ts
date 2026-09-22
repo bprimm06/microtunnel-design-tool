@@ -3,7 +3,7 @@
  * OSM data is community-sourced — always labeled "OSM-derived — field verify."
  */
 
-export type CrossingKind = 'road' | 'rail' | 'water' | 'building' | 'utility' | 'wetland';
+export type CrossingKind = 'road' | 'rail' | 'water' | 'building' | 'utility' | 'wetland' | 'levee';
 
 export interface Crossing {
   id: string;
