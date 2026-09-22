@@ -13,6 +13,7 @@ import type { Feature, LineString as LineStringGeom, Polygon as PolygonGeom } fr
 import type { Station } from '../geo/types';
 import { projectToAlignment } from '../geotech/borings';
 import type { Crossing, CrossingKind, OverpassElement } from './types';
+import type { NWIFeature } from './nwi';
 
 /** Station window for merging duplicate ways (dual carriageways, split ways). */
 export const DEDUPE_WINDOW_FT = 100;
@@ -102,6 +103,59 @@ function buildingHit(
 }
 
 /**
+ * Detect wetland crossings from NWI polygon features: boundary hits, else
+ * centroid projection — same treatment as buildings. Sorted by station;
+ * dedupe (100 ft, same kind+name) is left to the caller via mergeCrossings.
+ */
+export function detectWetlandCrossings(
+  features: NWIFeature[],
+  stations: Station[],
+): Crossing[] {
+  const align = alignmentLine(stations);
+  const found: Crossing[] = [];
+  for (const f of features) {
+    let hit: { lat: number; lon: number; stationFt: number; offsetFt: number } | null = null;
+    for (const ring of f.rings) {
+      hit = buildingHit(ring, align, stations);
+      if (hit) break;
+    }
+    if (!hit) continue;
+    found.push({
+      id: `nwi/${f.objectId}`,
+      kind: 'wetland',
+      name: f.wetlandType,
+      detail: `NWI ${f.attribute} · ${f.acres.toFixed(1)} ac — field verify`,
+      stationFt: hit.stationFt,
+      offsetFt: hit.offsetFt,
+      lat: hit.lat,
+      lon: hit.lon,
+      osmType: 'nwi',
+      osmId: f.objectId,
+    });
+  }
+  found.sort((a, b) => a.stationFt - b.stationFt);
+  return found;
+}
+
+/** Merge crossing lists, sort by station, dedupe same kind+name within 100 ft. */
+export function mergeCrossings(lists: Crossing[][]): Crossing[] {
+  const found = lists.flat().sort((a, b) => a.stationFt - b.stationFt);
+  const deduped: Crossing[] = [];
+  for (const c of found) {
+    const prev = deduped[deduped.length - 1];
+    if (
+      prev &&
+      prev.kind === c.kind &&
+      prev.name === c.name &&
+      Math.abs(c.stationFt - prev.stationFt) <= DEDUPE_WINDOW_FT
+    ) {
+      continue;
+    }
+    deduped.push(c);
+  }
+  return deduped;
+}
+/**
  * Detect crossings: classify each element, intersect with the alignment,
  * reference to station, drop non-hits, dedupe.
  */
@@ -134,19 +188,5 @@ export function detectCrossings(
       osmId: el.id,
     });
   }
-  found.sort((a, b) => a.stationFt - b.stationFt);
-  const deduped: Crossing[] = [];
-  for (const c of found) {
-    const prev = deduped[deduped.length - 1];
-    if (
-      prev &&
-      prev.kind === c.kind &&
-      prev.name === c.name &&
-      Math.abs(c.stationFt - prev.stationFt) <= DEDUPE_WINDOW_FT
-    ) {
-      continue; // same feature as multiple ways (dual carriageway, split way)
-    }
-    deduped.push(c);
-  }
-  return deduped;
+  return mergeCrossings([found]);
 }

@@ -9,6 +9,7 @@ const KIND_COLORS: Record<CrossingKind, string> = {
   water: '#2563eb',
   building: '#ea580c',
   utility: '#7c3aed',
+  wetland: '#0d9488',
 };
 
 export function kindColor(kind: CrossingKind): string {

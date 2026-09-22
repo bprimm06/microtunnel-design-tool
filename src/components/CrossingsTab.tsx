@@ -6,14 +6,15 @@ import {
   fetchOverpass,
   DEFAULT_CORRIDOR_HALF_WIDTH_FT,
 } from '../osm/overpass';
-import { detectCrossings } from '../osm/crossings';
+import { detectCrossings, detectWetlandCrossings, mergeCrossings } from '../osm/crossings';
+import { NwiError, fetchNWI } from '../osm/nwi';
 import { OsmError } from '../osm/types';
-import type { CrossingKind } from '../osm/types';
+import type { Crossing, CrossingKind } from '../osm/types';
 import { formatStation } from '../lib/format';
 import EmptyState, { PanelSection } from './EmptyState';
 import { kindColor } from './CrossingMarkers';
 
-const KINDS: CrossingKind[] = ['road', 'rail', 'water', 'building', 'utility'];
+const KINDS: CrossingKind[] = ['road', 'rail', 'water', 'building', 'utility', 'wetland'];
 
 export default function CrossingsTab() {
   const { state, setCrossings, clearCrossings } = useProject();
@@ -26,7 +27,7 @@ export default function CrossingsTab() {
     return (
       <EmptyState
         title="No crossings yet"
-        hint="Import a KMZ to begin, then detect crossings from OpenStreetMap."
+        hint="Import a KMZ to begin, then detect crossings from OpenStreetMap and NWI wetlands."
       />
     );
   }
@@ -47,13 +48,41 @@ export default function CrossingsTab() {
       if (!Number.isFinite(hw) || hw <= 0) {
         throw new OsmError('BAD_RESPONSE', 'Corridor half-width must be a positive number.');
       }
-      const poly = corridorPolyFilter(state.alignment!.stations, hw);
-      const data = await fetchOverpass(buildOverpassQuery(poly));
-      const all = detectCrossings(data.elements, state.alignment!.stations);
-      setCrossings(all.filter((c) => kinds.has(c.kind)));
+      const stations = state.alignment!.stations;
+      const poly = corridorPolyFilter(stations, hw);
+      // Query both sources in parallel; one may fail while the other succeeds.
+      const [osmSettled, nwiSettled] = await Promise.allSettled([
+        fetchOverpass(buildOverpassQuery(poly)),
+        fetchNWI(stations, hw),
+      ]);
+      const lists: Crossing[][] = [];
+      const failures: string[] = [];
+      if (osmSettled.status === 'fulfilled') {
+        lists.push(detectCrossings(osmSettled.value.elements, stations));
+      } else {
+        const e = osmSettled.reason;
+        failures.push(
+          `OpenStreetMap: ${e instanceof OsmError ? `(${e.code}) ${e.message}` : String(e)}`,
+        );
+      }
+      if (nwiSettled.status === 'fulfilled') {
+        lists.push(detectWetlandCrossings(nwiSettled.value, stations));
+      } else {
+        const e = nwiSettled.reason;
+        failures.push(
+          `NWI wetlands: ${e instanceof NwiError ? `(${e.code}) ${e.message}` : String(e)}`,
+        );
+      }
+      if (lists.length === 0) {
+        throw new Error(failures.join(' '));
+      }
+      if (failures.length > 0) {
+        setError(`Partial results — ${failures.join(' ')}`);
+      }
+      setCrossings(mergeCrossings(lists).filter((c) => kinds.has(c.kind)));
     } catch (e) {
       setError(
-        e instanceof OsmError
+        e instanceof OsmError || e instanceof NwiError
           ? `(${e.code}) ${e.message}`
           : `Detection failed: ${e instanceof Error ? e.message : String(e)}`,
       );
@@ -104,6 +133,10 @@ export default function CrossingsTab() {
           </div>
         )}
         <p className="mt-1 text-[11px] text-gray-500">OSM-derived — field verify.</p>
+        <p className="mt-1 text-[11px] text-gray-500">
+          NWI wetlands are screening data (1:12,000 aerial imagery), not a legal or
+          jurisdictional determination — field delineation governs. NWI-derived — field verify.
+        </p>
       </PanelSection>
 
       <PanelSection title={`Crossings (${state.crossings.length})`}>
