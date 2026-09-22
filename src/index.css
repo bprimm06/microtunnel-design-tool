@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+:root {
+  --clr-alignment: #4f46e5;
+  --clr-boring: #d97706;
+  --clr-crossing: #dc2626;
+  --clr-settlement: rgba(220, 38, 38, 0.25);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Tabular monospace for every number — units always shown alongside. */
+.num {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: #e5e7eb;
+}
