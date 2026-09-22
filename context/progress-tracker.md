@@ -95,7 +95,20 @@ any new scaffolding. Awaiting the HTML file from the user.
   and crossings appendices, shared assumptions list, field-verify disclaimers.
   Button enabled only on fresh results. 4 report tests green; end-to-end HTML
   validated (balanced tags, real values). 97/97 tests total.
-- [ ] **U12 — Deployment:** static build, verified on a real project file.
+- [x] **U12 — Deployment:** done 2026-09-22. Static site live at
+  https://bprimm06.github.io/microtunnel-design-tool/ (GitHub Pages, public
+  repo `bprimm06/microtunnel-design-tool`, branch `main`; `base: './'` for
+  subpath-safe asset paths). Live smoke test passed: page loads, Leaflet map
+  renders, demo `.microtunnel.json` project opened on the live site
+  (alignment Drive A, borings B-1/B-2, 2 crossings restored), Base case ran —
+  jacking (max base 3,035.6 kips, 16/16 self-checks), face (governing target
+  1,238 psf @7+00, 12/12), settlement rendered with INPUT REQUIRED status
+  (VL% 1% below geometric overcut annulus 20.99% — engine's legitimate check,
+  14/14 self-checks). Post-deploy fix: CARTO basemaps now need an API key →
+  replaced with Esri satellite (default) + OSM streets; hidden file inputs
+  changed to sr-only for a11y/automation. Session report: `audit/U12-session-report.md`.
+  Note: `gh` CLI auth token still present on the workspace at U12 close —
+  promised the user it would be wiped; do it before any further network work.
 - [x] **U13 — Project file save/open:** done 2026-09-22 per `specs/U13-project-file-spec.md`.
   One JSON file (`.microtunnel.json`, schema v1) holding all durable state: project
   name, alignment, waypoints, import warnings, profile, borings, cases, crossings.

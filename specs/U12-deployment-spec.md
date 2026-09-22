@@ -30,8 +30,20 @@ user's approval on 2026-09-22.
   otherwise.
 
 ## Completion checklist
-- [ ] `base: './'` set; production build has relative asset paths
-- [ ] Repo created and pushed; Pages enabled
-- [ ] Live URL loads and renders the app
-- [ ] Real project file opens correctly on the live site
-- [ ] progress-tracker.md updated (U12 done)
+- [x] `base: './'` set; production build has relative asset paths
+- [x] Repo created and pushed; Pages enabled (`bprimm06/microtunnel-design-tool`,
+      public repo, default branch `main`)
+- [x] Live URL loads and renders the app —
+      https://bprimm06.github.io/microtunnel-design-tool/
+- [x] Real project file opens correctly on the live site (demo
+      `.microtunnel.json`: alignment, borings, crossings restored; Base case
+      ran — jacking/face/settlement all rendered)
+- [x] progress-tracker.md updated (U12 done)
+
+## Post-deploy fix (2026-09-22)
+- CARTO Positron basemaps now require an API key and rendered an
+  "API KEY REQUIRED" watermark. Replaced with keyless layers: Esri World
+  Imagery (satellite, default) and OSM standard streets.
+- Hidden file inputs changed from `display:none` to `sr-only` (+ aria-labels):
+  keeps them out of sight while remaining addressable for assistive tech and
+  automated smoke tests. No UX change.
