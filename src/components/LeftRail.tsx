@@ -243,7 +243,8 @@ export default function LeftRail() {
           ref={projectFileRef}
           type="file"
           accept={`.json,${PROJECT_FILE_EXT}`}
-          className="hidden"
+          className="sr-only"
+          aria-label="Open project file"
           onChange={(e) => {
             void openProject(e.target.files?.[0]);
             e.target.value = '';
@@ -301,7 +302,8 @@ export default function LeftRail() {
           ref={fileRef}
           type="file"
           accept=".kmz,.kml"
-          className="hidden"
+          className="sr-only"
+          aria-label="Import KMZ or KML file"
           onChange={(e) => {
             void onFile(e.target.files?.[0]);
             e.target.value = '';

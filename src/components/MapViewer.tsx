@@ -65,10 +65,13 @@ function FitToAlignment() {
   return null;
 }
 
-const POSITRON = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-const POSITRON_DARK = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-const ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+const OSM_STANDARD = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSM_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const ESRI_IMAGERY =
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const ESRI_ATTRIBUTION =
+  'Imagery &copy; <a href="https://www.esri.com">Esri</a>, Maxar, Earthstar Geographics';
 
 const ALIGNMENT_STYLE = { color: '#4f46e5', weight: 4 };
 
@@ -82,11 +85,11 @@ export default function MapViewer() {
   return (
     <MapContainer center={[39.5, -98.35]} zoom={4} scrollWheelZoom className="z-0">
       <LayersControl position="topright">
-        <LayersControl.BaseLayer checked name="Light (Positron)">
-          <TileLayer url={POSITRON} attribution={ATTRIBUTION} maxZoom={20} />
+        <LayersControl.BaseLayer checked name="Satellite (Esri)">
+          <TileLayer url={ESRI_IMAGERY} attribution={ESRI_ATTRIBUTION} maxZoom={19} />
         </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Dark (Positron)">
-          <TileLayer url={POSITRON_DARK} attribution={ATTRIBUTION} maxZoom={20} />
+        <LayersControl.BaseLayer name="Streets (OSM)">
+          <TileLayer url={OSM_STANDARD} attribution={OSM_ATTRIBUTION} maxZoom={19} />
         </LayersControl.BaseLayer>
       </LayersControl>
 
