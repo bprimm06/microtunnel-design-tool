@@ -133,3 +133,14 @@ any new scaffolding. Awaiting the HTML file from the user.
 - Confirm stack defaults (or name alternatives) before U1 spec.
 - Reference hand-calc cases needed for U7/U8/U9 (user to supply or approve generated).
 - OSM data source: Overpass API default — ok, or local extract preferred?
+- [x] **U15 — NWI wetlands crossing kind:** done 2026-09-22 per
+  `specs/U15-wetlands-spec.md`. Detect crossings now queries the USFWS National
+  Wetlands Inventory (USGS-hosted MapServer, verified live) in parallel with
+  Overpass; wetland polygons become station-referenced `wetland` crossings
+  (name = WETLAND_TYPE, detail = NWI code + acres, teal markers, filter
+  checkbox). Partial source failure shows a warning naming the failed source
+  instead of failing the whole run. Tab carries "NWI-derived — field verify"
+  plus the screening-not-jurisdictional disclaimer. Old
+  `www.fws.gov/wetlands/arcgis/...` endpoint is dead — do not use. 10 new
+  tests green. 116/116 tests total. Live-verified on the ConEdison alignment:
+  11 road crossings, 0 wetlands (correct per direct service query), no errors.
