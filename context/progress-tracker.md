@@ -3,7 +3,7 @@
 > The ONLY dynamic context file. Update at unit start and unit end. This is the
 > project's memory between sessions.
 
-## Status: U19 + U20 done, awaiting deploy approval — 2026-09-22
+## Status: U19 + U20 deployed 2026-09-22 — user approved
 Six context files + project AGENTS.md written. Build has not started.
 
 **Update 2026-09-22:** User has an existing self-built HTML version of the tool (engine
