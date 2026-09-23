@@ -179,3 +179,11 @@ any new scaffolding. Awaiting the HTML file from the user.
   engineer-sealed deliverables). Header Help button + `?` FAB bottom-right;
   auto-opens on first visit with persistent dismissal. No changes to
   calculation, import, or save behavior.
+- [x] **U19 — Ground reference in the profile editor:** done 2026-09-22 per
+  `specs/U19-ground-reference-spec.md`. The invert editor now opens with a
+  "Ground elevations" section: launch (0+00) and reception ground with
+  per-source badges on one summary line, plus a collapsible all-stations table
+  with editable ground (launch/reception rows highlighted) — so inverts are
+  set against known ground. Empty-state hint when no ground exists; build is
+  not blocked. Help modal step 2 documents the ground-first workflow.
+  135/135 tests green; tsc/eslint/build clean. Awaiting deploy approval.
