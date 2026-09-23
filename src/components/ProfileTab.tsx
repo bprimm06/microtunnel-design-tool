@@ -168,7 +168,7 @@ export default function ProfileTab() {
           </p>
         )}
         <details className="mb-4">
-          <summary className="cursor-pointer text-xs text-indigo-700 underline">
+          <summary className="cursor-pointer text-xs text-brand-700 underline">
             All stations — enter surveyed ground ({gStations.length})
           </summary>
           <div className="mt-1 max-h-48 overflow-y-auto">
@@ -185,16 +185,16 @@ export default function ProfileTab() {
                   <tr
                     key={s.chainageFt}
                     className={`border-t border-gray-100 ${
-                      i === 0 || i === gStations.length - 1 ? 'bg-indigo-50' : ''
+                      i === 0 || i === gStations.length - 1 ? 'bg-brand-50' : ''
                     }`}
                   >
                     <td className="num py-0.5 pr-2">
                       {formatStation(s.chainageFt)}
                       {i === 0 && (
-                        <span className="ml-1 text-[10px] font-semibold text-indigo-700">launch</span>
+                        <span className="ml-1 text-[10px] font-semibold text-brand-700">launch</span>
                       )}
                       {i === gStations.length - 1 && gStations.length > 1 && (
-                        <span className="ml-1 text-[10px] font-semibold text-indigo-700">reception</span>
+                        <span className="ml-1 text-[10px] font-semibold text-brand-700">reception</span>
                       )}
                     </td>
                     <td className="num py-0.5 pr-2 text-right">
@@ -248,7 +248,7 @@ export default function ProfileTab() {
         ))}
         <button
           type="button"
-          className="mb-3 text-xs text-indigo-700 underline"
+          className="mb-3 text-xs text-brand-700 underline"
           onClick={() => setRows((rs) => [...rs, { station: '', invert: '' }])}
         >
           + Add control point
@@ -304,7 +304,7 @@ export default function ProfileTab() {
         {error && <p className="mb-2 text-[11px] font-medium text-red-700">{error}</p>}
         <button
           type="button"
-          className="w-full rounded bg-indigo-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+          className="w-full rounded bg-brand-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
           onClick={onBuild}
         >
           Build profile
@@ -347,7 +347,7 @@ export default function ProfileTab() {
         </div>
         <button
           type="button"
-          className="mt-2 text-xs text-indigo-700 underline"
+          className="mt-2 text-xs text-brand-700 underline"
           onClick={() => {
             setRows(toRows(profile.input.controlPoints));
             setPipeOD(String(profile.input.pipeODFt));
@@ -359,7 +359,7 @@ export default function ProfileTab() {
         {hasGeBackup && (
           <button
             type="button"
-            className="mt-2 text-xs text-indigo-700 underline"
+            className="mt-2 text-xs text-brand-700 underline"
             title="Reset every station's ground to its KMZ-derived value"
             onClick={() => {
               if (

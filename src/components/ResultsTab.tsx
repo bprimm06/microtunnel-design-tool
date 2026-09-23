@@ -264,7 +264,7 @@ export default function ResultsTab() {
           type="button"
           disabled={!state.profile}
           title={state.profile ? 'Build a case from the current profile' : 'Build a profile first'}
-          className="w-full rounded bg-indigo-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="w-full rounded bg-brand-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-gray-300"
           onClick={createCase}
         >
           New case from profile
@@ -278,7 +278,7 @@ export default function ResultsTab() {
               <li
                 key={c.id}
                 className={`flex items-center justify-between rounded border p-2 ${
-                  state.selectedCaseId === c.id ? 'border-indigo-600' : 'border-gray-200'
+                  state.selectedCaseId === c.id ? 'border-brand-600' : 'border-gray-200'
                 }`}
               >
                 <button
@@ -329,7 +329,7 @@ export default function ResultsTab() {
           <div className="p-3">
             <button
               type="button"
-              className="w-full rounded bg-indigo-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+              className="w-full rounded bg-brand-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
               onClick={run}
             >
               Run all three engines
@@ -344,7 +344,7 @@ export default function ResultsTab() {
                     ? 'Inputs changed — run again before exporting'
                     : 'Download a self-contained HTML calculation report'
               }
-              className="mt-2 w-full rounded border border-indigo-600 px-2 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
+              className="mt-2 w-full rounded border border-brand-600 px-2 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-50 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
               onClick={exportReport}
             >
               Export report (HTML)

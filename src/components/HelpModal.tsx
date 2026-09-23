@@ -10,7 +10,7 @@ export const HELP_SEEN_KEY = 'microtunnel-help-seen';
 function Step({ n, children }: { n: number; children: React.ReactNode }) {
   return (
     <div className="flex gap-2">
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[11px] font-semibold text-indigo-700">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[11px] font-semibold text-brand-700">
         {n}
       </span>
       <div className="text-[13px] leading-relaxed text-gray-700">{children}</div>
@@ -97,6 +97,19 @@ export function HelpBody() {
           not engineer-sealed deliverables.
         </p>
       </section>
+
+      <section>
+        <h4 className="mb-1 text-sm font-semibold text-gray-900">Legal notice</h4>
+        <p className="text-[13px] leading-relaxed text-gray-700">
+          © 2026 Branako K. Primm, PE. All rights reserved. Microtunnel Design
+          Tool® is the proprietary creation of Branako K. Primm, PE. This software
+          is a preliminary screening aid for microtunnel design per ASCE 36-15; it
+          does not replace engineering judgment, and its outputs — including
+          exported HTML reports — are unsealed working documents, not
+          engineer-sealed deliverables. No warranty is expressed or implied.
+          Unauthorized copying, distribution, or reverse engineering is prohibited.
+        </p>
+      </section>
     </div>
   );
 }
@@ -154,7 +167,7 @@ export default function HelpModal({ onClose }: { onClose: () => void }) {
         <div className="border-t border-gray-200 px-5 py-3 text-right">
           <button
             type="button"
-            className="rounded bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+            className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
             onClick={dismiss}
           >
             Got it — start working

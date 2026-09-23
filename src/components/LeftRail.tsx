@@ -277,7 +277,7 @@ export default function LeftRail() {
         <div className="mt-2 flex gap-2">
           <button
             type="button"
-            className="flex-1 rounded bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-700"
+            className="flex-1 rounded bg-brand-600 px-2 py-1 text-xs font-medium text-white hover:bg-brand-700"
             onClick={() => void saveProject()}
           >
             Save project
@@ -335,7 +335,7 @@ export default function LeftRail() {
         />
         <button
           type="button"
-          className="w-full rounded bg-indigo-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+          className="w-full rounded bg-brand-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
           onClick={() => fileRef.current?.click()}
         >
           Import KMZ / KML
@@ -370,7 +370,7 @@ export default function LeftRail() {
                   type="checkbox"
                   checked={state.layers[key]}
                   onChange={() => toggleLayer(key)}
-                  className="h-3.5 w-3.5 accent-indigo-600"
+                  className="h-3.5 w-3.5 accent-brand-600"
                 />
                 <span
                   className="inline-block h-2.5 w-2.5 rounded-full border border-gray-300"

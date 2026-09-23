@@ -216,7 +216,7 @@ function SegmentsForm({ c }: { c: CalcCase }) {
         </button>
         <button
           type="button"
-          className="text-xs text-indigo-700 underline"
+          className="text-xs text-brand-700 underline"
           onClick={addSegment}
         >
           + Add segment
@@ -258,7 +258,7 @@ function SegmentsForm({ c }: { c: CalcCase }) {
               </label>
               <button
                 type="button"
-                className="text-xs text-indigo-700 underline"
+                className="text-xs text-brand-700 underline"
                 onClick={() => setExpanded(expanded === i ? null : i)}
               >
                 {expanded === i ? 'Hide advanced' : 'Advanced'}
@@ -310,7 +310,7 @@ function LibrariesForm({ c }: { c: CalcCase }) {
               onClick={() => updateCase({ ...c, groundClasses: c.groundClasses.filter((_, j) => j !== i) })}>×</button>
           </div>
         ))}
-        <button type="button" className="text-xs text-indigo-700 underline"
+        <button type="button" className="text-xs text-brand-700 underline"
           onClick={() => updateCase({ ...c, groundClasses: [...c.groundClasses, { cls: '', fLowPsf: 0, fBasePsf: 0, fHighPsf: 0 }] })}>
           + Add class
         </button>
@@ -331,7 +331,7 @@ function LibrariesForm({ c }: { c: CalcCase }) {
               onClick={() => updateCase({ ...c, kLibrary: c.kLibrary.filter((_, j) => j !== i) })}>×</button>
           </div>
         ))}
-        <button type="button" className="text-xs text-indigo-700 underline"
+        <button type="button" className="text-xs text-brand-700 underline"
           onClick={() => updateCase({ ...c, kLibrary: [...c.kLibrary, { cls: '', k: 0.5 }] })}>
           + Add class
         </button>
@@ -363,7 +363,7 @@ function CapacitiesForm({ c }: { c: CalcCase }) {
             onClick={() => updateCase({ ...c, globals: { ...c.globals, capacities: caps.filter((_, j) => j !== i) } })}>×</button>
         </div>
       ))}
-      <button type="button" className="text-xs text-indigo-700 underline"
+      <button type="button" className="text-xs text-brand-700 underline"
         onClick={() => updateCase({ ...c, globals: { ...c.globals, capacities: [...caps, { name: '', owner: '' }] } })}>
         + Add capacity
       </button>
@@ -393,7 +393,7 @@ function ReceptorsForm({ c }: { c: CalcCase }) {
             onClick={() => updateCase({ ...c, receptors: c.receptors.filter((_, j) => j !== i) })}>×</button>
         </div>
       ))}
-      <button type="button" className="text-xs text-indigo-700 underline"
+      <button type="button" className="text-xs text-brand-700 underline"
         onClick={() => updateCase({ ...c, receptors: [...c.receptors, { name: `R-${c.receptors.length + 1}`, stationFt: c.stationStartFt, offsetFt: 0 }] })}>
         + Add receptor
       </button>

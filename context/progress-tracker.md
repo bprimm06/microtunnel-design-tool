@@ -3,7 +3,7 @@
 > The ONLY dynamic context file. Update at unit start and unit end. This is the
 > project's memory between sessions.
 
-## Status: U19 done, uncommitted→committed, awaiting deploy approval — 2026-09-22
+## Status: U19 + U20 done, awaiting deploy approval — 2026-09-22
 Six context files + project AGENTS.md written. Build has not started.
 
 **Update 2026-09-22:** User has an existing self-built HTML version of the tool (engine
@@ -186,4 +186,12 @@ any new scaffolding. Awaiting the HTML file from the user.
   with editable ground (launch/reception rows highlighted) — so inverts are
   set against known ground. Empty-state hint when no ground exists; build is
   not blocked. Help modal step 2 documents the ground-first workflow.
+  135/135 tests green; tsc/eslint/build clean. Awaiting deploy approval.
+- [x] **U20 — Branding, ownership & legal notice:** done 2026-09-22 per
+  `specs/U20-branding-spec.md`. Brand palette from the original HTML
+  (#1F4FA3/#183E85/#E8EEF8) applied across the interface (Tailwind v4
+  `@theme`, all indigo → brand). Deep-blue header: "Microtunnel Design
+  Tool®" + "Branako K. Primm, PE · © 2026 · v1.0.0". Footer bar with
+  ownership line and a Legal notice button. Help modal gains the suggested
+  legal notice; HTML report footer carries the ® mark and copyright.
   135/135 tests green; tsc/eslint/build clean. Awaiting deploy approval.

@@ -1,7 +1,16 @@
 @import "tailwindcss";
 
+/* Brand palette — from the original HTML tool (Microtunnel_Jacking_Load_Tool):
+   --accent #1F4FA3, --accent-h #183E85, --accent-lt #E8EEF8. */
+@theme {
+  --color-brand-50: #e8eef8;
+  --color-brand-100: #d5e0f4;
+  --color-brand-600: #1f4fa3;
+  --color-brand-700: #183e85;
+}
+
 :root {
-  --clr-alignment: #4f46e5;
+  --clr-alignment: #1f4fa3;
   --clr-boring: #d97706;
   --clr-crossing: #dc2626;
   --clr-settlement: rgba(220, 38, 38, 0.25);

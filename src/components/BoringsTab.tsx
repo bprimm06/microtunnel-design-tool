@@ -119,7 +119,7 @@ function BoringEditor({ boring, onClose }: { boring: Boring; onClose: () => void
         {boring.depthSource !== 'rule' && profileStations && (
           <button
             type="button"
-            className="ml-2 text-indigo-700 underline"
+            className="ml-2 text-brand-700 underline"
             onClick={onResetRule}
           >
             Reset to rule
@@ -168,7 +168,7 @@ function BoringEditor({ boring, onClose }: { boring: Boring; onClose: () => void
       ))}
       <button
         type="button"
-        className="mb-2 text-xs text-indigo-700 underline"
+        className="mb-2 text-xs text-brand-700 underline"
         onClick={() => setRows((rs) => [...rs, { top: '', bottom: '', description: '' }])}
       >
         + Add stratum
@@ -178,7 +178,7 @@ function BoringEditor({ boring, onClose }: { boring: Boring; onClose: () => void
       <div className="flex gap-2">
         <button
           type="button"
-          className="rounded bg-indigo-600 px-3 py-1 text-sm font-medium text-white hover:bg-indigo-700"
+          className="rounded bg-brand-600 px-3 py-1 text-sm font-medium text-white hover:bg-brand-700"
           onClick={onSave}
         >
           Save
@@ -241,7 +241,7 @@ export default function BoringsTab() {
         <button
           type="button"
           className={`w-full rounded px-2 py-1.5 text-sm font-medium text-white ${
-            state.placingBoring ? 'bg-amber-600 hover:bg-amber-700' : 'bg-indigo-600 hover:bg-indigo-700'
+            state.placingBoring ? 'bg-amber-600 hover:bg-amber-700' : 'bg-brand-600 hover:bg-brand-700'
           }`}
           onClick={() => setPlacing(!state.placingBoring)}
         >
@@ -267,7 +267,7 @@ export default function BoringsTab() {
                 </span>
                 <button
                   type="button"
-                  className="text-indigo-700 underline"
+                  className="text-brand-700 underline"
                   title="Create a boring at this waypoint"
                   onClick={() => convertWaypoint(i)}
                 >

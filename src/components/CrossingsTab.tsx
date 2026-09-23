@@ -129,7 +129,7 @@ export default function CrossingsTab() {
           type="button"
           disabled={loading}
           onClick={detect}
-          className="w-full rounded bg-indigo-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-wait disabled:bg-gray-400"
+          className="w-full rounded bg-brand-600 px-2 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-wait disabled:bg-gray-400"
         >
           {loading ? 'Querying sources…' : 'Detect crossings'}
         </button>
@@ -137,7 +137,7 @@ export default function CrossingsTab() {
           <div className="mt-2 rounded border border-red-300 bg-red-50 p-2 text-[11px] text-red-800">
             <p className="font-semibold">Detection failed</p>
             <p>{error}</p>
-            <button type="button" className="mt-1 text-indigo-700 underline" onClick={detect}>
+            <button type="button" className="mt-1 text-brand-700 underline" onClick={detect}>
               Retry
             </button>
           </div>
