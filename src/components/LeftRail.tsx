@@ -107,10 +107,21 @@ export default function LeftRail() {
       return;
     }
     // First save (or after unlink): ask the user where to put the file.
-    const handle = await pickSaveLocation(
-      projectFileName(state.projectName, new Date().toISOString()),
-    );
-    if (!handle) return;
+    let handle: FileSystemFileHandle | null;
+    try {
+      handle = await pickSaveLocation(
+        projectFileName(state.projectName, new Date().toISOString()),
+      );
+    } catch (e) {
+      // A rejected picker (SecurityError, NotAllowedError, …) must not die as
+      // an unhandled rejection with zero UI feedback.
+      console.error('Save project: file picker failed', e);
+      markSaveError(
+        e instanceof DOMException ? `${e.name}: ${e.message}` : String(e),
+      );
+      return;
+    }
+    if (!handle) return; // user cancelled the picker
     await linkHandle(handle, handle.name);
     await writeToHandle(handle, true);
   };
@@ -121,10 +132,20 @@ export default function LeftRail() {
       downloadCopy();
       return;
     }
-    const handle = await pickSaveLocation(
-      projectFileName(state.projectName, new Date().toISOString()),
-    );
-    if (!handle) return;
+    let handle: FileSystemFileHandle | null;
+    try {
+      handle = await pickSaveLocation(
+        projectFileName(state.projectName, new Date().toISOString()),
+      );
+    } catch (e) {
+      // A rejected picker must surface in the UI, not die silently.
+      console.error('Save as: file picker failed', e);
+      markSaveError(
+        e instanceof DOMException ? `${e.name}: ${e.message}` : String(e),
+      );
+      return;
+    }
+    if (!handle) return; // user cancelled the picker
     await linkHandle(handle, handle.name);
     await writeToHandle(handle, true);
   };
