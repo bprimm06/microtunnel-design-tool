@@ -7,11 +7,14 @@ import type { ProfileInput, ProfileResult } from '../geo/types';
 import type { Boring } from '../geotech/types';
 import type { CalcCase } from './types';
 
-export function profileFingerprint(input: ProfileInput, stationCount: number): string {
+export function profileFingerprint(
+  input: ProfileInput,
+  stations: { groundElevFt?: number }[],
+): string {
   return JSON.stringify({
     pipeODFt: input.pipeODFt,
     controlPoints: input.controlPoints,
-    stationCount,
+    grounds: stations.map((s) => s.groundElevFt ?? null),
   });
 }
 
@@ -37,7 +40,7 @@ export function buildCaseFromProfile(
     id: crypto.randomUUID(),
     name,
     createdAt: new Date().toISOString(),
-    profileFingerprint: profileFingerprint(input, stations.length),
+    profileFingerprint: profileFingerprint(input, stations),
     stationStartFt: first.chainageFt,
     stationEndFt: last.chainageFt,
     globals: {

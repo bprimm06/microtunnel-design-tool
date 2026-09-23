@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useProject } from '../state/ProjectContext';
 import type { LayerVisibility } from '../state/ProjectContext';
+import type { GroundSource } from '../geo/types';
 import { importFile } from '../io/kmz';
 import { ImportError } from '../io/kmz-errors';
 import {
@@ -50,6 +51,8 @@ export default function LeftRail() {
   const fileRef = useRef<HTMLInputElement>(null);
   const projectFileRef = useRef<HTMLInputElement>(null);
   const [projectFileError, setProjectFileError] = useState<string | null>(null);
+  /** Ground source for the next KMZ/KML import — UI setting only, not serialized. */
+  const [groundSource, setGroundSource] = useState<GroundSource>('kmz');
   const fsSupported = supportsFS();
 
   const hasProjectData =
@@ -213,7 +216,7 @@ export default function LeftRail() {
   const onFile = async (file: File | undefined) => {
     if (!file) return;
     try {
-      const result = await importFile(await file.arrayBuffer(), file.name);
+      const result = await importFile(await file.arrayBuffer(), file.name, groundSource);
       setImportResult(result);
     } catch (e) {
       const msg =
@@ -337,6 +340,19 @@ export default function LeftRail() {
         >
           Import KMZ / KML
         </button>
+        <label className="mt-2 flex items-center gap-2 text-xs text-gray-700">
+          Ground source
+          <select
+            className="rounded border border-gray-300 px-1 py-0.5 text-xs"
+            value={groundSource}
+            onChange={(e) => setGroundSource(e.target.value as GroundSource)}
+            aria-label="Ground elevation source for the next import"
+            title="KMZ altitudes interpolates Google Earth vertex altitudes every 25 ft; manual entry leaves ground blank for you to fill in the Profile tab."
+          >
+            <option value="kmz">KMZ altitudes (GE-derived)</option>
+            <option value="manual">Manual entry</option>
+          </select>
+        </label>
         <p className="mt-1 text-[11px] text-gray-500">
           Alignment LineStrings and waypoint borings from Google Earth.
         </p>

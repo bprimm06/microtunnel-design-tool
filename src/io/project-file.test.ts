@@ -49,6 +49,34 @@ describe('project file round-trip', () => {
     expect(parsed).toEqual(toProjectFileData(s));
   });
 
+  it('round-trips geGroundElevFt and elevSource on stations', () => {
+    const s = state();
+    s.alignment!.stations = [
+      { chainageFt: 0, lat: 30, lon: -97, groundElevFt: 101.5, geGroundElevFt: 100, elevSource: 'survey' },
+      { chainageFt: 400, lat: 30.001, lon: -96.996, groundElevFt: 96, geGroundElevFt: 96, elevSource: 'ge' },
+    ];
+    const parsed = parseProjectFile(serializeProject(s));
+    expect(parsed.alignment!.stations[0]).toMatchObject({
+      groundElevFt: 101.5,
+      geGroundElevFt: 100,
+      elevSource: 'survey',
+    });
+    expect(parsed.alignment!.stations[1]).toMatchObject({
+      groundElevFt: 96,
+      geGroundElevFt: 96,
+      elevSource: 'ge',
+    });
+  });
+
+  it('accepts legacy project files without geGroundElevFt', () => {
+    const raw = JSON.parse(serializeProject(state())) as {
+      alignment: { stations: Record<string, unknown>[] };
+    };
+    for (const st of raw.alignment.stations) delete st.geGroundElevFt;
+    const parsed = parseProjectFile(JSON.stringify(raw));
+    expect(parsed.alignment!.stations).toHaveLength(2);
+  });
+
   it('stamps the schema version', () => {
     const raw = JSON.parse(serializeProject(state())) as { version: number };
     expect(raw.version).toBe(PROJECT_FILE_VERSION);

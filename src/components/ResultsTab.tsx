@@ -254,7 +254,7 @@ export default function ResultsTab() {
   const profileStale =
     selected !== null &&
     state.profile !== null &&
-    profileFingerprint(state.profile.input, state.profile.result.stations.length) !==
+    profileFingerprint(state.profile.input, state.profile.result.stations) !==
       selected.profileFingerprint;
 
   return (

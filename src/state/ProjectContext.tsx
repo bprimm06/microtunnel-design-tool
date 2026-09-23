@@ -10,7 +10,10 @@ import type {
   KmlWaypoint,
   ProfileInput,
   ProfileResult,
+  Station,
 } from '../geo/types';
+import { buildProfile } from '../geo/profile';
+import { restoreGeGround, setStationGround } from '../geo/stationing';
 import type { Boring } from '../geotech/types';
 import { defaultBoringDepth } from '../geotech/borings';
 import type { CalcCase } from '../cases/types';
@@ -61,6 +64,8 @@ type Action =
   | { type: 'SET_IMPORT_ERROR'; message: string }
   | { type: 'SET_PROFILE'; input: ProfileInput; result: ProfileResult }
   | { type: 'CLEAR_PROFILE' }
+  | { type: 'SET_STATION_GROUND'; chainageFt: number; groundElevFt?: number }
+  | { type: 'RESTORE_GE_GROUND' }
   | { type: 'CLEAR_ALIGNMENT' }
   | { type: 'ADD_BORING'; boring: Boring }
   | { type: 'UPDATE_BORING'; boring: Boring }
@@ -129,6 +134,23 @@ function refreshRuleDepths(borings: Boring[], profile: ProfileResult | null): Bo
   });
 }
 
+/**
+ * Apply new alignment stations (e.g. an edited ground elevation) and rebuild
+ * the derived profile result against the current input. Pure.
+ */
+function withRebuiltProfile(state: ProjectState, stations: Station[]): ProjectState {
+  if (!state.alignment) return state;
+  const alignment = { ...state.alignment, stations };
+  if (!state.profile) return { ...state, alignment };
+  const result = buildProfile(stations, state.profile.input);
+  return {
+    ...state,
+    alignment,
+    profile: { input: state.profile.input, result },
+    borings: refreshRuleDepths(state.borings, result),
+  };
+}
+
 function reducer(state: ProjectState, action: Action): ProjectState {
   switch (action.type) {
     case 'SET_PROJECT_NAME':
@@ -161,6 +183,15 @@ function reducer(state: ProjectState, action: Action): ProjectState {
         profile: null,
         borings: refreshRuleDepths(state.borings, null),
       };
+    case 'SET_STATION_GROUND':
+      if (!state.alignment) return state;
+      return withRebuiltProfile(
+        state,
+        setStationGround(state.alignment.stations, action.chainageFt, action.groundElevFt),
+      );
+    case 'RESTORE_GE_GROUND':
+      if (!state.alignment) return state;
+      return withRebuiltProfile(state, restoreGeGround(state.alignment.stations));
     case 'CLEAR_ALIGNMENT':
       return {
         ...state,
@@ -268,6 +299,8 @@ interface ProjectContextValue {
   setImportError: (message: string) => void;
   setProfile: (input: ProfileInput, result: ProfileResult) => void;
   clearProfile: () => void;
+  setStationGround: (chainageFt: number, groundElevFt?: number) => void;
+  restoreGeGround: () => void;
   clearAlignment: () => void;
   addBoring: (boring: Boring) => void;
   updateBoring: (boring: Boring) => void;
@@ -305,6 +338,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       setProfile: (input: ProfileInput, result: ProfileResult) =>
         dispatch({ type: 'SET_PROFILE', input, result }),
       clearProfile: () => dispatch({ type: 'CLEAR_PROFILE' }),
+      setStationGround: (chainageFt: number, groundElevFt?: number) =>
+        dispatch({ type: 'SET_STATION_GROUND', chainageFt, groundElevFt }),
+      restoreGeGround: () => dispatch({ type: 'RESTORE_GE_GROUND' }),
       clearAlignment: () => dispatch({ type: 'CLEAR_ALIGNMENT' }),
       addBoring: (boring: Boring) => dispatch({ type: 'ADD_BORING', boring }),
       updateBoring: (boring: Boring) => dispatch({ type: 'UPDATE_BORING', boring }),

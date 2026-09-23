@@ -6,6 +6,9 @@
 /** Provenance of an elevation value. */
 export type ElevSource = 'ge' | 'survey' | 'unknown';
 
+/** Ground-elevation source chosen at KMZ/KML import. UI setting only — not serialized. */
+export type GroundSource = 'kmz' | 'manual';
+
 export interface GeoPoint {
   lat: number;
   lon: number;
@@ -30,6 +33,11 @@ export interface Station {
   /** Ground-surface elevation, feet. */
   groundElevFt?: number;
   elevSource?: ElevSource;
+  /**
+   * KMZ/Google-Earth-derived ground elevation, feet. Retained at import even
+   * when the working ground is overridden — enables one-click restore.
+   */
+  geGroundElevFt?: number;
 }
 
 export interface AlignmentGeometry {

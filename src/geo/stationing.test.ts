@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { buildStations, computeVertexChainages, M_TO_FT } from './stationing';
-import type { KmlVertex } from './types';
+import {
+  buildStations,
+  computeVertexChainages,
+  restoreGeGround,
+  setStationGround,
+  M_TO_FT,
+} from './stationing';
+import type { KmlVertex, Station } from './types';
 
 /**
  * Independent reference: plain haversine (no Turf). The implementation under
@@ -103,5 +109,70 @@ describe('buildStations', () => {
       ),
     ).toThrow(/zero length/);
     expect(() => buildStations(VERTICES, 0)).toThrow(/positive/);
+  });
+
+  it('retains the KMZ value as geGroundElevFt alongside working ground', () => {
+    const { stations } = buildStations(VERTICES, 100_000);
+    expect(stations).toHaveLength(2);
+    for (const s of stations) {
+      expect(s.groundElevFt).toBeDefined();
+      expect(s.geGroundElevFt).toBe(s.groundElevFt);
+      expect(s.elevSource).toBe('ge');
+    }
+  });
+
+  it('manual ground source leaves stations without ground', () => {
+    const { stations, warnings } = buildStations(VERTICES, 100_000, 'manual');
+    expect(stations).toHaveLength(2);
+    for (const s of stations) {
+      expect(s.groundElevFt).toBeUndefined();
+      expect(s.geGroundElevFt).toBeUndefined();
+      expect(s.elevSource).toBeUndefined();
+    }
+    expect(warnings.some((w) => /manual entry/i.test(w))).toBe(true);
+  });
+});
+
+describe('setStationGround', () => {
+  const base: Station[] = [
+    { chainageFt: 0, lat: 30, lon: -97, groundElevFt: 328, geGroundElevFt: 328, elevSource: 'ge' },
+    { chainageFt: 25, lat: 30, lon: -97 },
+  ];
+
+  it('marks a typed value as user-entered survey', () => {
+    const out = setStationGround(base, 0, 330.5);
+    expect(out[0]!.groundElevFt).toBe(330.5);
+    expect(out[0]!.elevSource).toBe('survey');
+    expect(out[0]!.geGroundElevFt).toBe(328); // KMZ value retained underneath
+    expect(out[1]).toEqual(base[1]); // untouched
+  });
+
+  it('clearing restores the retained KMZ value', () => {
+    const edited = setStationGround(base, 0, 330.5);
+    const out = setStationGround(edited, 0, undefined);
+    expect(out[0]!.groundElevFt).toBe(328);
+    expect(out[0]!.elevSource).toBe('ge');
+  });
+
+  it('clearing without a KMZ value leaves the station without ground', () => {
+    const edited = setStationGround(base, 25, 331);
+    expect(edited[1]!.elevSource).toBe('survey');
+    const out = setStationGround(edited, 25, undefined);
+    expect(out[1]!.groundElevFt).toBeUndefined();
+    expect(out[1]!.elevSource).toBeUndefined();
+  });
+});
+
+describe('restoreGeGround', () => {
+  it('resets working ground to KMZ values and leaves others untouched', () => {
+    const stations: Station[] = [
+      { chainageFt: 0, lat: 30, lon: -97, groundElevFt: 330.5, geGroundElevFt: 328, elevSource: 'survey' },
+      { chainageFt: 25, lat: 30, lon: -97, groundElevFt: 331, elevSource: 'survey' },
+    ];
+    const out = restoreGeGround(stations);
+    expect(out[0]!.groundElevFt).toBe(328);
+    expect(out[0]!.elevSource).toBe('ge');
+    expect(out[1]!.groundElevFt).toBe(331); // no KMZ value — untouched
+    expect(out[1]!.elevSource).toBe('survey');
   });
 });

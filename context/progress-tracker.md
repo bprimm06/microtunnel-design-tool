@@ -3,7 +3,7 @@
 > The ONLY dynamic context file. Update at unit start and unit end. This is the
 > project's memory between sessions.
 
-## Status: U16 done — 2026-09-22 (NLD levees as a crossing kind)
+## Status: U17 + U18 done — 2026-09-22 (ground data choice; Help menu)
 Six context files + project AGENTS.md written. Build has not started.
 
 **Update 2026-09-22:** User has an existing self-built HTML version of the tool (engine
@@ -158,3 +158,24 @@ any new scaffolding. Awaiting the HTML file from the user.
   total. Live-verified: ConEdison corridor returns 0 embankments (true zero,
   confirmed by direct service query); Sacramento envelope returns 228 real
   embankments through the actual `fetchNLD` module.
+- [x] **U17 — Ground data choice:** done 2026-09-22 per
+  `specs/U17-ground-choice-spec.md`. Import-time ground-source select in the
+  left rail: `KMZ altitudes (GE-derived)` (default) or `Manual entry`.
+  `Station.geGroundElevFt` retains the KMZ value even when the working ground
+  is overridden; manual imports keep the backup so nothing is lost. Ground is
+  editable at every station in the Profile table — typed values set
+  `elevSource: 'survey'`, clearing restores the KMZ value where one exists.
+  `Restore GE ground` bulk-resets with a confirm dialog when survey overrides
+  exist. Per-source badges (GE-derived — field verify / user-entered — verify).
+  Ground now feeds `profileFingerprint`, so ground edits mark calc cases stale.
+  `geGroundElevFt` round-trips through project save/open without a schema
+  change. 8 new tests green, 135/135 total; ConEdison KMZ smoke-verified
+  (KMZ + manual imports, edit/clear/restore semantics).
+- [x] **U18 — Help menu:** done 2026-09-22 per `specs/U18-help-menu-spec.md`.
+  `HelpModal` with instructions like the original HTML's "How to Use" dialog,
+  rewritten for this app's workflow: what the tool does, numbered how-to steps
+  (import → profile → borings → crossings → results → save/report), data-source
+  & field-verify badges, and what it is not (unsealed working documents, not
+  engineer-sealed deliverables). Header Help button + `?` FAB bottom-right;
+  auto-opens on first visit with persistent dismissal. No changes to
+  calculation, import, or save behavior.

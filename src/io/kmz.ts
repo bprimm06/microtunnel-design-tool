@@ -6,7 +6,7 @@ import JSZip from 'jszip';
 import { parseKml } from './kml';
 import { buildAlignment } from '../geo/stationing';
 import { M_TO_FT } from '../geo/stationing';
-import type { AlignmentGeometry, ImportResult, KmlWaypoint } from '../geo/types';
+import type { AlignmentGeometry, GroundSource, ImportResult, KmlWaypoint } from '../geo/types';
 import { ImportError } from './kmz-errors';
 
 function isZip(data: Uint8Array): boolean {
@@ -44,7 +44,11 @@ async function extractKmlText(data: Uint8Array, filename: string): Promise<strin
   );
 }
 
-export async function importFile(data: ArrayBuffer, filename: string): Promise<ImportResult> {
+export async function importFile(
+  data: ArrayBuffer,
+  filename: string,
+  groundSource: GroundSource = 'kmz',
+): Promise<ImportResult> {
   const bytes = new Uint8Array(data);
   const xml = await extractKmlText(bytes, filename);
   const source = isZip(bytes) || filename.toLowerCase().endsWith('.kmz') ? 'kmz' : 'kml';
@@ -62,7 +66,7 @@ export async function importFile(data: ArrayBuffer, filename: string): Promise<I
       continue;
     }
     try {
-      const b = buildAlignment(ls.name, ls.vertices, source);
+      const b = buildAlignment(ls.name, ls.vertices, source, undefined, groundSource);
       built.push(b);
       warnings.push(...b.warnings.map((w) => `"${ls.name}": ${w}`));
     } catch (e) {

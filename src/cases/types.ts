@@ -93,7 +93,7 @@ export interface CalcCase {
   id: string;
   name: string;
   createdAt: string;
-  /** JSON of {pipeODFt, controls, stationCount} — stale banner when live profile differs. */
+  /** JSON of {pipeODFt, controls, ground elevations} — stale banner when live profile differs. */
   profileFingerprint: string;
   stationStartFt: number;
   stationEndFt: number;

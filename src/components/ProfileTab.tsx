@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useProject } from '../state/ProjectContext';
 import { buildProfile, ProfileError } from '../geo/profile';
-import type { ProfileControlPoint, ProfileInput } from '../geo/types';
+import type { ElevSource, ProfileControlPoint, ProfileInput } from '../geo/types';
 import { formatFt, formatStation } from '../lib/format';
 import EmptyState, { PanelSection } from './EmptyState';
 import GeBadge from './GeBadge';
+import SurveyBadge from './SurveyBadge';
 import ProfileChart from './ProfileChart';
 
 interface Row {
@@ -15,8 +16,7 @@ interface Row {
 const toRows = (cps: ProfileControlPoint[]): Row[] =>
   cps.map((c) => ({ station: String(c.stationFt), invert: String(c.invertElevFt) }));
 
-function parseRows(rows: Row[]): ProfileControlPoint[] {
-  return rows.map((r, i) => {
+function parseRows(rows: Row[]): ProfileControlPoint[] {  return rows.map((r, i) => {
     const stationFt = Number(r.station);
     const invertElevFt = Number(r.invert);
     if (!Number.isFinite(stationFt) || !Number.isFinite(invertElevFt)) {
@@ -29,8 +29,64 @@ function parseRows(rows: Row[]): ProfileControlPoint[] {
   });
 }
 
+/**
+ * Editable ground-elevation cell. Commits on blur/Enter: a typed value marks
+ * the station user-entered; clearing restores the KMZ value where one exists.
+ */
+function GroundInput({
+  chainageFt,
+  groundElevFt,
+  onCommit,
+}: {
+  chainageFt: number;
+  groundElevFt?: number;
+  onCommit: (chainageFt: number, value: number | undefined) => void;
+}) {
+  const committed = groundElevFt !== undefined ? groundElevFt.toFixed(2) : '';
+  const [draft, setDraft] = useState(committed);
+  const [lastCommitted, setLastCommitted] = useState(committed);
+  if (committed !== lastCommitted) {
+    setLastCommitted(committed);
+    setDraft(committed);
+  }
+  const commit = () => {
+    const t = draft.trim();
+    if (t === '') {
+      onCommit(chainageFt, undefined);
+      return;
+    }
+    const v = Number(t);
+    if (!Number.isFinite(v)) {
+      setDraft(committed); // revert invalid input
+      return;
+    }
+    onCommit(chainageFt, v);
+  };
+  return (
+    <input
+      className="num w-20 rounded border border-gray-300 px-1 py-0.5 text-right text-xs"
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        if (e.key === 'Escape') setDraft(committed);
+      }}
+      aria-label={`Ground elevation at ${formatStation(chainageFt)}, feet`}
+      title="Type a surveyed elevation, or clear to restore the KMZ value"
+      inputMode="decimal"
+    />
+  );
+}
+
+function SourceBadge({ source }: { source?: ElevSource }) {
+  if (source === 'ge') return <GeBadge />;
+  if (source === 'survey') return <SurveyBadge />;
+  return <span className="text-gray-400">—</span>;
+}
+
 export default function ProfileTab() {
-  const { state, setProfile, clearProfile } = useProject();
+  const { state, setProfile, clearProfile, setStationGround, restoreGeGround } = useProject();
   const alignment = state.alignment;
   const profile = state.profile;
 
@@ -194,6 +250,9 @@ export default function ProfileTab() {
   const stations = profile.result.stations;
   const minCover = Math.min(...stations.map((s) => s.coverFt ?? Infinity));
   const maxDepth = Math.max(...stations.map((s) => s.depthToInvertFt ?? -Infinity));
+  const sources = new Set(stations.map((s) => s.elevSource));
+  const hasGeBackup = stations.some((s) => s.geGroundElevFt !== undefined);
+  const surveyCount = stations.filter((s) => s.elevSource === 'survey').length;
 
   return (
     <div>
@@ -208,8 +267,13 @@ export default function ProfileTab() {
           }))}
           showRuleLine={true}
         />
-        <p className="mt-1">
-          <GeBadge /> <span className="text-[11px] text-gray-500">ground elevations</span>
+        <p className="mt-1 flex flex-wrap items-center gap-1">
+          {sources.has('ge') && <GeBadge />}
+          {sources.has('survey') && <SurveyBadge />}
+          {sources.size === 0 && (
+            <span className="text-[11px] text-gray-500">no ground elevations yet —</span>
+          )}
+          <span className="text-[11px] text-gray-500">ground elevations</span>
         </p>
         <div className="num mt-2 grid grid-cols-2 gap-1 text-xs text-gray-700">
           <span>Min cover: {formatFt(minCover)}</span>
@@ -226,6 +290,25 @@ export default function ProfileTab() {
         >
           Edit inputs
         </button>{' '}
+        {hasGeBackup && (
+          <button
+            type="button"
+            className="mt-2 text-xs text-indigo-700 underline"
+            title="Reset every station's ground to its KMZ-derived value"
+            onClick={() => {
+              if (
+                surveyCount === 0 ||
+                window.confirm(
+                  `Replace ${surveyCount} user-entered ground elevation(s) with KMZ-derived values?`,
+                )
+              ) {
+                restoreGeGround();
+              }
+            }}
+          >
+            Restore GE ground
+          </button>
+        )}{' '}
         <button
           type="button"
           className="mt-2 text-xs text-red-700 underline"
@@ -272,7 +355,8 @@ export default function ProfileTab() {
             <thead className="sticky top-0 bg-white">
               <tr className="text-left text-[11px] text-gray-500">
                 <th className="py-1 pr-2">Station</th>
-                <th className="py-1 pr-2 text-right">Ground</th>
+                <th className="py-1 pr-2 text-right">Ground (ft)</th>
+                <th className="py-1 pr-2">Src</th>
                 <th className="py-1 pr-2 text-right">Invert</th>
                 <th className="py-1 pr-2 text-right">Cover</th>
                 <th className="py-1 text-right">Depth</th>
@@ -282,7 +366,16 @@ export default function ProfileTab() {
               {stations.map((s) => (
                 <tr key={s.chainageFt} className="border-t border-gray-100">
                   <td className="num py-0.5 pr-2">{formatStation(s.chainageFt)}</td>
-                  <td className="num py-0.5 pr-2 text-right">{formatFt(s.groundElevFt)}</td>
+                  <td className="num py-0.5 pr-2 text-right">
+                    <GroundInput
+                      chainageFt={s.chainageFt}
+                      groundElevFt={s.groundElevFt}
+                      onCommit={setStationGround}
+                    />
+                  </td>
+                  <td className="py-0.5 pr-2">
+                    <SourceBadge source={s.elevSource} />
+                  </td>
                   <td className="num py-0.5 pr-2 text-right">{formatFt(s.invertElevFt)}</td>
                   <td
                     className={`num py-0.5 pr-2 text-right ${

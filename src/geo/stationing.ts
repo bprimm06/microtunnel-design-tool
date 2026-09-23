@@ -4,7 +4,7 @@
  * 3.28084 factor (1 ft = 0.3048 m by definition).
  */
 import { distance, along, lineString } from '@turf/turf';
-import type { AlignmentGeometry, KmlVertex, Station } from './types';
+import type { AlignmentGeometry, GroundSource, KmlVertex, Station } from './types';
 import { ImportError } from '../io/kmz-errors';
 
 export const M_TO_FT = 3.28084;
@@ -32,10 +32,16 @@ export interface StationBuild {
 /**
  * Build stations at a fixed chainage interval along the vertex path.
  * Chainage 0 at the first vertex; the final vertex is always a station.
+ *
+ * groundSource 'kmz': working ground comes from KML vertex altitudes
+ * (elevSource 'ge'), and the KMZ value is also retained as geGroundElevFt.
+ * groundSource 'manual': stations get no ground — the user enters surveyed
+ * elevations in the profile table.
  */
 export function buildStations(
   vertices: KmlVertex[],
   intervalFt: number = DEFAULT_STATION_INTERVAL_FT,
+  groundSource: GroundSource = 'kmz',
 ): StationBuild {
   if (vertices.length < 2) {
     throw new ImportError('EMPTY_LINESTRING', 'LineString has fewer than 2 vertices.');
@@ -67,7 +73,11 @@ export function buildStations(
 
   const warnings: string[] = [];
   const missingElev = vertices.some((v) => v.altM === undefined);
-  if (valued.length === 0) {
+  if (groundSource === 'manual') {
+    warnings.push(
+      'Ground source: manual entry — enter surveyed ground elevations in the Profile tab station table.',
+    );
+  } else if (valued.length === 0) {
     warnings.push('No vertex altitudes found — stations have no ground elevation (GE-derived — field verify).');
   } else if (missingElev) {
     warnings.push('Some vertices lack altitude — elevations interpolated between valued neighbors.');
@@ -93,11 +103,14 @@ export function buildStations(
   const stations: Station[] = chainages.map((chainage) => {
     const pt = along(line, chainage / M_TO_FT, { units: 'meters' });
     const [lon, lat] = pt.geometry.coordinates as [number, number];
-    const { groundElevFt } = elevAt(chainage);
     const st: Station = { chainageFt: chainage, lat, lon };
-    if (groundElevFt !== undefined) {
-      st.groundElevFt = groundElevFt;
-      st.elevSource = 'ge';
+    if (groundSource === 'kmz') {
+      const { groundElevFt } = elevAt(chainage);
+      if (groundElevFt !== undefined) {
+        st.groundElevFt = groundElevFt;
+        st.geGroundElevFt = groundElevFt;
+        st.elevSource = 'ge';
+      }
     }
     return st;
   });
@@ -110,7 +123,45 @@ export function buildAlignment(
   vertices: KmlVertex[],
   source: 'kmz' | 'kml',
   intervalFt: number = DEFAULT_STATION_INTERVAL_FT,
+  groundSource: GroundSource = 'kmz',
 ): { alignment: AlignmentGeometry; warnings: string[] } {
-  const { stations, lengthFt, warnings } = buildStations(vertices, intervalFt);
+  const { stations, lengthFt, warnings } = buildStations(vertices, intervalFt, groundSource);
   return { alignment: { name, stations, lengthFt, source }, warnings };
+}
+
+/**
+ * Set (or clear) one station's working ground elevation. A typed value marks
+ * the station user-entered (elevSource 'survey'); clearing restores the
+ * retained KMZ value where one exists, otherwise leaves the station without
+ * ground. Pure — the caller rebuilds the profile.
+ */
+export function setStationGround(
+  stations: Station[],
+  chainageFt: number,
+  groundElevFt: number | undefined,
+): Station[] {
+  return stations.map((s) => {
+    if (s.chainageFt !== chainageFt) return s;
+    if (groundElevFt === undefined || !Number.isFinite(groundElevFt)) {
+      if (s.geGroundElevFt !== undefined) {
+        return { ...s, groundElevFt: s.geGroundElevFt, elevSource: 'ge' as const };
+      }
+      // No KMZ value to fall back to — drop the working ground entirely.
+      const cleared: Station = { chainageFt: s.chainageFt, lat: s.lat, lon: s.lon };
+      return cleared;
+    }
+    return { ...s, groundElevFt, elevSource: 'survey' as const };
+  });
+}
+
+/**
+ * Reset every station's working ground to its retained KMZ-derived value.
+ * Stations imported without KMZ altitudes are left untouched. Pure.
+ */
+export function restoreGeGround(stations: Station[]): Station[] {
+  return stations.map((s) =>
+    s.geGroundElevFt !== undefined
+      ? { ...s, groundElevFt: s.geGroundElevFt, elevSource: 'ge' as const }
+      : s,
+  );
 }
