@@ -3,6 +3,7 @@ import { useProject } from '../state/ProjectContext';
 import { autoSplitSegments } from '../cases/buildCase';
 import type { CalcCase, CaseSegment } from '../cases/types';
 import type { FrictionMode, LateralBasis } from '../engine/jacking/types';
+import { findMtbm, mtbmGroups } from '../mtbm/catalog';
 import { PanelSection } from './EmptyState';
 
 function Num({
@@ -51,6 +52,119 @@ function Text({
         onChange={(e) => onChange(e.target.value)}
       />
     </label>
+  );
+}
+
+function MtbmSection({ c }: { c: CalcCase }) {
+  const { updateCase } = useProject();
+  const g = c.globals;
+  const machine = findMtbm(g.mtbmId);
+  const groups = mtbmGroups();
+
+  const apply = (id: string) => {
+    if (id === 'custom' || id === '') {
+      updateCase({
+        ...c,
+        globals: { ...g, mtbmId: id === 'custom' ? 'custom' : undefined, mtbmModel: undefined, cutterHead: undefined },
+      });
+      return;
+    }
+    const m = findMtbm(id);
+    if (!m) return;
+    updateCase({
+      ...c,
+      globals: {
+        ...g,
+        mtbmId: m.id,
+        mtbmModel: `${m.manufacturer} ${m.model}`,
+        cutterHead:
+          g.cutterHead && m.cutterHeads.includes(g.cutterHead) ? g.cutterHead : m.cutterHeads[0],
+        cutterODIn: m.cutterOdIn,
+      },
+    });
+  };
+
+  const edited =
+    machine !== undefined &&
+    g.cutterODIn !== undefined &&
+    Math.abs(g.cutterODIn - machine.cutterOdIn) > 0.05;
+
+  const spec = (label: string, value: string | undefined) =>
+    value !== undefined ? (
+      <span>
+        <span className="text-gray-500">{label}:</span> {value}
+      </span>
+    ) : null;
+
+  return (
+    <PanelSection title="MTBM">
+      <label className="block text-xs text-gray-600">
+        Machine (autopopulates cutter head + specs)
+        <select
+          className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1 text-sm"
+          value={g.mtbmId ?? ''}
+          onChange={(e) => apply(e.target.value)}
+        >
+          <option value="">Select MTBM…</option>
+          {groups.map(([grp, ms]) => (
+            <optgroup key={grp} label={grp}>
+              {ms.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.model} — {m.shieldOdMm} mm shield
+                </option>
+              ))}
+            </optgroup>
+          ))}
+          <option value="custom">Custom / manual entry</option>
+        </select>
+      </label>
+      {machine && (
+        <div className="mt-2 rounded border border-gray-200 bg-gray-50 p-2">
+          <div className="num grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px] text-gray-700">
+            {spec('Shield OD', `${machine.shieldOdMm} mm (${machine.cutterOdIn.toFixed(2)} in)`)}
+            {spec('Pipe', machine.pipeOdMm !== undefined ? `${machine.pipeOdMm} mm OD` : undefined)}
+            {spec('Max torque', machine.maxTorqueKNm !== undefined ? `${machine.maxTorqueKNm} kN·m` : undefined)}
+            {spec('Cutter speed', machine.cutterRpm !== undefined ? `${machine.cutterRpm} rpm` : undefined)}
+            {spec('Rated power', machine.ratedPowerKw !== undefined ? `${machine.ratedPowerKw} kW` : undefined)}
+            {spec(
+              'Steering',
+              machine.steerCylCount !== undefined && machine.steerForcePerCylKN !== undefined
+                ? `${machine.steerCylCount} × ${machine.steerForcePerCylKN} kN`
+                : undefined,
+            )}
+            {spec('Slurry line', machine.slurryLineMm !== undefined ? `${machine.slurryLineMm} mm` : undefined)}
+            {spec('Drive length', machine.recDriveLengthM !== undefined ? `≈${machine.recDriveLengthM} m` : undefined)}
+          </div>
+          <label className="mt-1.5 block text-xs text-gray-600">
+            Cutting wheel
+            <select
+              className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1 text-sm"
+              value={g.cutterHead ?? ''}
+              onChange={(e) => updateCase({ ...c, globals: { ...g, cutterHead: e.target.value || undefined } })}
+            >
+              {machine.cutterHeads.map((h) => (
+                <option key={h} value={h}>
+                  {h}
+                </option>
+              ))}
+            </select>
+          </label>
+          {edited && (
+            <p className="mt-1 text-[11px] text-amber-800">
+              Cutter OD edited from the catalog {machine.cutterOdIn.toFixed(2)} in.
+            </p>
+          )}
+          <p className="mt-1 text-[11px] text-gray-500">
+            Catalog-derived — verify with the manufacturer data sheet.
+          </p>
+        </div>
+      )}
+      {!machine && g.mtbmId === 'custom' && (
+        <p className="mt-1 text-[11px] text-gray-500">
+          Manual entry — type the cutter OD in Globals below.
+        </p>
+      )}
+    </PanelSection>
   );
 }
 
@@ -404,6 +518,7 @@ function ReceptorsForm({ c }: { c: CalcCase }) {
 export default function CaseEditor({ c }: { c: CalcCase }) {
   return (
     <div>
+      <MtbmSection c={c} />
       <GlobalsForm c={c} />
       <SegmentsForm c={c} />
       <CapacitiesForm c={c} />

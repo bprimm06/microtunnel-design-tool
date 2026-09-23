@@ -55,6 +55,12 @@ export interface CaseGlobals {
   pipeODIn?: number;
   /** Cutter OD must exceed pipe OD (face engine warns otherwise). Required. */
   cutterODIn?: number;
+  /** Catalog machine id ('custom' = manual entry); autopopulates cutterODIn. */
+  mtbmId?: string;
+  /** Display label, e.g. 'Herrenknecht AVN 1200 XC'. */
+  mtbmModel?: string;
+  /** Selected cutting wheel, e.g. 'Mixed ground'. */
+  cutterHead?: string;
   faceBasis: LateralBasis;
   targetBasis: LateralBasis;
   restartLow?: number;

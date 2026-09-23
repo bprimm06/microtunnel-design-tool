@@ -3,6 +3,7 @@ import { useProject } from '../state/ProjectContext';
 import { buildCaseFromProfile, profileFingerprint } from '../cases/buildCase';
 import { runCase } from '../cases/runCase';
 import { CaseError } from '../cases/types';
+import type { CalcCase } from '../cases/types';
 import type { CaseResults } from '../cases/runCase';
 import type { JackingResults } from '../engine/jacking/types';
 import type { FaceResults } from '../engine/face-pressure/types';
@@ -17,7 +18,7 @@ import {
 } from '../lib/format';
 import EmptyState, { PanelSection } from './EmptyState';
 import CaseEditor from './CaseEditor';
-import { REPORT_ASSUMPTIONS } from '../cases/assumptions';
+import { REPORT_ASSUMPTIONS, settlementAssumptions } from '../cases/assumptions';
 import { buildReportHtml, reportFilename } from '../report/buildReport';
 import { downloadHtml } from '../report/download';
 
@@ -157,8 +158,9 @@ function TroughChart({ trough }: { trough: { xFt: number; settleIn: number }[] }
   );
 }
 
-function SettlementSection({ r }: { r: SettlementResults }) {
+function SettlementSection({ c, r }: { c: CalcCase; r: SettlementResults }) {
   const gov = r.segments[r.govIdx];
+  const assumptions = settlementAssumptions(c, r);
   return (
     <PanelSection title="Settlement (U9)">
       <div className="num mb-1 grid grid-cols-2 gap-1 text-xs text-gray-700">
@@ -198,6 +200,14 @@ function SettlementSection({ r }: { r: SettlementResults }) {
         </table>
       )}
       <Warnings items={r.warnings} />
+      <div className="mt-2 border-t border-gray-100 pt-1">
+        <p className="text-[11px] font-semibold text-gray-700">Assumptions</p>
+        <ul className="list-disc space-y-0.5 pl-4 text-[11px] text-gray-600">
+          {assumptions.map((a, i) => (
+            <li key={i}>{a}</li>
+          ))}
+        </ul>
+      </div>
     </PanelSection>
   );
 }
@@ -365,7 +375,7 @@ export default function ResultsTab() {
             <>
               <JackingSection r={results.jacking} />
               <FaceSection r={results.face} />
-              <SettlementSection r={results.settlement} />
+              <SettlementSection c={selected} r={results.settlement} />
               <PanelSection title="Assumptions">
                 <ul className="list-disc space-y-0.5 pl-4 text-[11px] text-gray-600">
                   {REPORT_ASSUMPTIONS.map((a, i) => (

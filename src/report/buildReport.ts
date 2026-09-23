@@ -3,7 +3,7 @@
  * print-friendly HTML document. No DOM, no app state — fully testable.
  * All user-controlled strings are HTML-escaped.
  */
-import { REPORT_ASSUMPTIONS } from '../cases/assumptions';
+import { REPORT_ASSUMPTIONS, settlementAssumptions } from '../cases/assumptions';
 import { formatStation } from '../lib/format';
 import type { ReportInput } from './types';
 
@@ -169,6 +169,7 @@ ${section(
     ['Drive length', `${num(j.driveLengthFt, 0)} ft`],
     ['Pipe OD', `${num(g.pipeODIn, 1)} in`],
     ['Cutter OD', `${num(g.cutterODIn, 1)} in`],
+    ['MTBM', g.mtbmModel ? `${esc(g.mtbmModel)}${g.cutterHead ? ` — ${esc(g.cutterHead)} wheel` : ''}` : 'manual entry'],
     ['Face basis (jacking)', esc(g.faceBasis)],
     ['Face target basis', esc(g.targetBasis)],
     ['Profile fingerprint', `<span class="muted">${esc(c.profileFingerprint.slice(0, 24))}…</span>`],
@@ -252,7 +253,10 @@ ${section(
           ['Receptor', 'Station', 'Offset (ft)', 'Settlement (in)', 'Limit (in)', 'Ratio', 'Status'],
           receptorRows,
         )
-      : '<p class="muted">No receptors defined.</p>'),
+      : '<p class="muted">No receptors defined.</p>') +
+    `<h3>Assumptions</h3><ul class="assump">${settlementAssumptions(c, s)
+      .map((a) => `<li>${esc(a)}</li>`)
+      .join('')}</ul>`,
 )}
 
 ${section(
