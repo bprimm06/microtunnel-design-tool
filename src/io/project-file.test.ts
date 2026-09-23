@@ -6,6 +6,7 @@ import {
   toProjectFileData,
   ProjectFileError,
   PROJECT_FILE_VERSION,
+  PROJECT_FILE_EXT,
 } from './project-file';
 import type { ProjectState } from '../state/ProjectContext';
 
@@ -95,7 +96,13 @@ describe('project file round-trip', () => {
 describe('projectFileName', () => {
   it('builds a safe filename', () => {
     expect(projectFileName('Demo <Project>', '2026-09-22T18:00:00.000Z')).toBe(
-      'demo-project-2026-09-22.microtunnel.json',
+      'demo-project-2026-09-22.mtunnel.json',
     );
+  });
+
+  it('keeps the extension within Chrome picker limits', () => {
+    // Chrome's showSaveFilePicker/showOpenFilePicker reject extensions
+    // longer than 16 characters.
+    expect(PROJECT_FILE_EXT.length).toBeLessThanOrEqual(16);
   });
 });

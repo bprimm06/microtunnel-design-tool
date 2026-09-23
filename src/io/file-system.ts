@@ -14,10 +14,20 @@ export function supportsFS(): boolean {
   );
 }
 
-const FILE_TYPES: FilePickerAcceptType[] = [
+const SAVE_FILE_TYPES: FilePickerAcceptType[] = [
   {
     description: 'Microtunnel project',
     accept: { 'application/json': [PROJECT_FILE_EXT] },
+  },
+];
+
+// '.json' is listed so project files saved under the legacy '.microtunnel.json'
+// extension — which Chrome's picker refuses as a filter because it is longer
+// than 16 characters — still appear in the open dialog.
+const OPEN_FILE_TYPES: FilePickerAcceptType[] = [
+  {
+    description: 'Microtunnel project',
+    accept: { 'application/json': [PROJECT_FILE_EXT, '.json'] },
   },
 ];
 
@@ -30,7 +40,7 @@ export async function pickSaveLocation(
   suggestedName: string,
 ): Promise<FileSystemFileHandle | null> {
   try {
-    return await window.showSaveFilePicker({ suggestedName, types: FILE_TYPES });
+    return await window.showSaveFilePicker({ suggestedName, types: SAVE_FILE_TYPES });
   } catch (e) {
     if (cancelled(e)) return null;
     throw e;
@@ -40,7 +50,7 @@ export async function pickSaveLocation(
 /** Ask the user which project file to open. Null when they cancel. */
 export async function pickOpenFile(): Promise<FileSystemFileHandle | null> {
   try {
-    const [handle] = await window.showOpenFilePicker({ types: FILE_TYPES, multiple: false });
+    const [handle] = await window.showOpenFilePicker({ types: OPEN_FILE_TYPES, multiple: false });
     return handle ?? null;
   } catch (e) {
     if (cancelled(e)) return null;

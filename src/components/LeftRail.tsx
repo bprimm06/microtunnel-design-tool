@@ -263,7 +263,7 @@ export default function LeftRail() {
         <input
           ref={projectFileRef}
           type="file"
-          accept={`.json,${PROJECT_FILE_EXT}`}
+          accept={`.json,${PROJECT_FILE_EXT},.microtunnel.json`}
           className="sr-only"
           aria-label="Open project file"
           onChange={(e) => {

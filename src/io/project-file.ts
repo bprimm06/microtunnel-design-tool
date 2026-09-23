@@ -5,7 +5,10 @@
 import type { ProjectState } from '../state/ProjectContext';
 
 export const PROJECT_FILE_VERSION = 1;
-export const PROJECT_FILE_EXT = '.microtunnel.json';
+// Chrome's showSaveFilePicker/showOpenFilePicker reject extensions longer
+// than 16 characters ('.microtunnel.json' is 17 and threw on every save),
+// so this must stay short.
+export const PROJECT_FILE_EXT = '.mtunnel.json';
 
 export type ProjectFileErrorCode = 'INVALID_JSON' | 'UNSUPPORTED_VERSION' | 'INVALID_SCHEMA';
 
