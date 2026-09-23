@@ -6,6 +6,7 @@ import { createContext, useContext, useMemo, useReducer } from 'react';
 import type { ReactNode } from 'react';
 import type {
   AlignmentGeometry,
+  ElevSource,
   ImportResult,
   KmlWaypoint,
   ProfileInput,
@@ -13,7 +14,7 @@ import type {
   Station,
 } from '../geo/types';
 import { buildProfile } from '../geo/profile';
-import { restoreGeGround, setStationGround } from '../geo/stationing';
+import { restoreGeGround, setStationGround, setStationsGround } from '../geo/stationing';
 import type { Boring } from '../geotech/types';
 import { defaultBoringDepth } from '../geotech/borings';
 import type { CalcCase } from '../cases/types';
@@ -65,6 +66,11 @@ type Action =
   | { type: 'SET_PROFILE'; input: ProfileInput; result: ProfileResult }
   | { type: 'CLEAR_PROFILE' }
   | { type: 'SET_STATION_GROUND'; chainageFt: number; groundElevFt?: number }
+  | {
+      type: 'SET_STATIONS_GROUND';
+      updates: { chainageFt: number; groundElevFt: number }[];
+      source: ElevSource;
+    }
   | { type: 'RESTORE_GE_GROUND' }
   | { type: 'CLEAR_ALIGNMENT' }
   | { type: 'ADD_BORING'; boring: Boring }
@@ -189,6 +195,12 @@ function reducer(state: ProjectState, action: Action): ProjectState {
         state,
         setStationGround(state.alignment.stations, action.chainageFt, action.groundElevFt),
       );
+    case 'SET_STATIONS_GROUND':
+      if (!state.alignment) return state;
+      return withRebuiltProfile(
+        state,
+        setStationsGround(state.alignment.stations, action.updates, action.source),
+      );
     case 'RESTORE_GE_GROUND':
       if (!state.alignment) return state;
       return withRebuiltProfile(state, restoreGeGround(state.alignment.stations));
@@ -300,6 +312,10 @@ interface ProjectContextValue {
   setProfile: (input: ProfileInput, result: ProfileResult) => void;
   clearProfile: () => void;
   setStationGround: (chainageFt: number, groundElevFt?: number) => void;
+  setStationsGround: (
+    updates: { chainageFt: number; groundElevFt: number }[],
+    source: ElevSource,
+  ) => void;
   restoreGeGround: () => void;
   clearAlignment: () => void;
   addBoring: (boring: Boring) => void;
@@ -340,6 +356,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       clearProfile: () => dispatch({ type: 'CLEAR_PROFILE' }),
       setStationGround: (chainageFt: number, groundElevFt?: number) =>
         dispatch({ type: 'SET_STATION_GROUND', chainageFt, groundElevFt }),
+      setStationsGround: (
+        updates: { chainageFt: number; groundElevFt: number }[],
+        source: ElevSource,
+      ) => dispatch({ type: 'SET_STATIONS_GROUND', updates, source }),
       restoreGeGround: () => dispatch({ type: 'RESTORE_GE_GROUND' }),
       clearAlignment: () => dispatch({ type: 'CLEAR_ALIGNMENT' }),
       addBoring: (boring: Boring) => dispatch({ type: 'ADD_BORING', boring }),

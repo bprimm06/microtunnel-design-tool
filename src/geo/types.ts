@@ -4,7 +4,7 @@
  */
 
 /** Provenance of an elevation value. */
-export type ElevSource = 'ge' | 'survey' | 'unknown';
+export type ElevSource = 'ge' | 'survey' | '3dep' | 'unknown';
 
 /** Ground-elevation source chosen at KMZ/KML import. UI setting only — not serialized. */
 export type GroundSource = 'kmz' | 'manual';

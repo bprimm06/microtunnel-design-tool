@@ -39,11 +39,15 @@ export function HelpBody() {
             <b>Import a KMZ / KML.</b> The alignment is stationed every 25 ft. Choose
             the ground source first: <i>KMZ altitudes (GE-derived)</i> interpolates
             Google Earth vertex altitudes, or <i>Manual entry</i> leaves ground blank
-            for surveyed values.
+            for surveyed values. A path clamped to ground in Google Earth exports
+            altitude 0 everywhere — the tool flags that as unusable rather than
+            designing to 0.0 ft.
           </Step>
           <Step n={2}>
             <b>Build the profile.</b> Check ground at the launch and reception shafts
-            first — the editor shows both before you set the invert. Set invert control
+            first — the editor shows both before you set the invert. Missing ground
+            can be pulled from USGS 3DEP with <i>Fetch ground from 3DEP</i> (NAVD88,
+            ~10 m — flagged 3DEP-derived, field verify). Set invert control
             points and pipe OD, then build. Ground elevations stay editable at every
             station — typed values are flagged user-entered, and <i>Restore GE ground</i>{' '}
             brings back the KMZ values.

@@ -4,7 +4,7 @@
  * 3.28084 factor (1 ft = 0.3048 m by definition).
  */
 import { distance, along, lineString } from '@turf/turf';
-import type { AlignmentGeometry, GroundSource, KmlVertex, Station } from './types';
+import type { AlignmentGeometry, ElevSource, GroundSource, KmlVertex, Station } from './types';
 import { ImportError } from '../io/kmz-errors';
 
 export const M_TO_FT = 3.28084;
@@ -73,12 +73,23 @@ export function buildStations(
 
   const warnings: string[] = [];
   const missingElev = vertices.some((v) => v.altM === undefined);
+  // A path clamped to ground in Google Earth exports altitude 0 on every
+  // vertex. Those zeros are not elevations — treat them as missing so the
+  // tool never silently designs to 0.0 ft ground.
+  const clampedToGround =
+    groundSource === 'kmz' && valued.length > 0 && valued.every((p) => p.altM === 0);
+  const usableKmAltitudes = groundSource === 'kmz' && valued.length > 0 && !clampedToGround;
   if (groundSource === 'manual') {
     warnings.push(
       'Ground source: manual entry — enter surveyed ground elevations in the Profile tab station table.',
     );
   } else if (valued.length === 0) {
     warnings.push('No vertex altitudes found — stations have no ground elevation (GE-derived — field verify).');
+  } else if (clampedToGround) {
+    warnings.push(
+      'KMZ altitudes are all zero — the path is likely clamped to ground in Google Earth, so no usable ' +
+        'ground elevations were imported. Fetch 3DEP elevations or enter surveyed values in the Profile tab.',
+    );
   } else if (missingElev) {
     warnings.push('Some vertices lack altitude — elevations interpolated between valued neighbors.');
   }
@@ -104,7 +115,7 @@ export function buildStations(
     const pt = along(line, chainage / M_TO_FT, { units: 'meters' });
     const [lon, lat] = pt.geometry.coordinates as [number, number];
     const st: Station = { chainageFt: chainage, lat, lon };
-    if (groundSource === 'kmz') {
+    if (usableKmAltitudes) {
       const { groundElevFt } = elevAt(chainage);
       if (groundElevFt !== undefined) {
         st.groundElevFt = groundElevFt;
@@ -151,6 +162,24 @@ export function setStationGround(
       return cleared;
     }
     return { ...s, groundElevFt, elevSource: 'survey' as const };
+  });
+}
+
+/**
+ * Set working ground on many stations at once (e.g. a 3DEP fetch), tagging
+ * each with the given provenance. Stations not in `updates` keep their
+ * existing ground. Pure — the caller rebuilds the profile.
+ */
+export function setStationsGround(
+  stations: Station[],
+  updates: { chainageFt: number; groundElevFt: number }[],
+  source: ElevSource,
+): Station[] {
+  const byChainage = new Map(updates.map((u) => [u.chainageFt, u.groundElevFt]));
+  return stations.map((s) => {
+    const v = byChainage.get(s.chainageFt);
+    if (v === undefined || !Number.isFinite(v)) return s;
+    return { ...s, groundElevFt: v, elevSource: source };
   });
 }
 

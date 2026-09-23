@@ -4,6 +4,7 @@ import {
   computeVertexChainages,
   restoreGeGround,
   setStationGround,
+  setStationsGround,
   M_TO_FT,
 } from './stationing';
 import type { KmlVertex, Station } from './types';
@@ -96,6 +97,32 @@ describe('buildStations', () => {
     expect(warnings.some((w) => /No vertex altitudes/.test(w))).toBe(true);
   });
 
+  it('treats all-zero altitudes as clamped-to-ground, not 0.0 ft elevations', () => {
+    // Google Earth clamps drawn paths to the terrain and exports altitude 0
+    // on every vertex — those zeros are not elevations.
+    const verts: KmlVertex[] = [
+      { lon: -97.0, lat: 30.0, altM: 0 },
+      { lon: -96.999, lat: 30.0, altM: 0 },
+    ];
+    const { stations, warnings } = buildStations(verts, 100_000);
+    expect(stations[0]!.groundElevFt).toBeUndefined();
+    expect(stations[0]!.geGroundElevFt).toBeUndefined();
+    expect(stations[0]!.elevSource).toBeUndefined();
+    expect(warnings.some((w) => /clamped to ground/.test(w))).toBe(true);
+    expect(warnings.some((w) => /3DEP/.test(w))).toBe(true);
+  });
+
+  it('keeps real zeros when mixed with nonzero altitudes', () => {
+    const verts: KmlVertex[] = [
+      { lon: -97.0, lat: 30.0, altM: 0 },
+      { lon: -96.999, lat: 30.0, altM: 10 },
+    ];
+    const { stations, warnings } = buildStations(verts, 100_000);
+    expect(stations[0]!.groundElevFt).toBeCloseTo(0, 6);
+    expect(stations[0]!.elevSource).toBe('ge');
+    expect(warnings.some((w) => /clamped/.test(w))).toBe(false);
+  });
+
   it('rejects degenerate input with named errors', () => {
     expect(() => buildStations([], 25)).toThrow(/fewer than 2/);
     expect(() => buildStations([{ lon: -97, lat: 30 }], 25)).toThrow(/fewer than 2/);
@@ -160,6 +187,42 @@ describe('setStationGround', () => {
     const out = setStationGround(edited, 25, undefined);
     expect(out[1]!.groundElevFt).toBeUndefined();
     expect(out[1]!.elevSource).toBeUndefined();
+  });
+});
+
+describe('setStationsGround', () => {
+  const base: Station[] = [
+    { chainageFt: 0, lat: 30, lon: -97 },
+    { chainageFt: 25, lat: 30, lon: -97, groundElevFt: 330, elevSource: 'survey' },
+    { chainageFt: 50, lat: 30, lon: -97 },
+  ];
+
+  it('sets ground on listed stations and tags the given provenance', () => {
+    const out = setStationsGround(
+      base,
+      [
+        { chainageFt: 0, groundElevFt: 328.1 },
+        { chainageFt: 50, groundElevFt: 329.4 },
+      ],
+      '3dep',
+    );
+    expect(out[0]!.groundElevFt).toBe(328.1);
+    expect(out[0]!.elevSource).toBe('3dep');
+    expect(out[2]!.groundElevFt).toBe(329.4);
+    expect(out[2]!.elevSource).toBe('3dep');
+  });
+
+  it('overwrites existing ground but leaves unlisted stations untouched', () => {
+    const out = setStationsGround(base, [{ chainageFt: 25, groundElevFt: 331 }], '3dep');
+    expect(out[1]!.groundElevFt).toBe(331);
+    expect(out[1]!.elevSource).toBe('3dep');
+    expect(out[0]).toEqual(base[0]);
+    expect(out[2]).toEqual(base[2]);
+  });
+
+  it('ignores non-finite values', () => {
+    const out = setStationsGround(base, [{ chainageFt: 0, groundElevFt: NaN }], '3dep');
+    expect(out[0]).toEqual(base[0]);
   });
 });
 

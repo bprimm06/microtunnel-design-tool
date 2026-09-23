@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useProject } from '../state/ProjectContext';
 import { buildProfile, ProfileError } from '../geo/profile';
 import type { ElevSource, ProfileControlPoint, ProfileInput } from '../geo/types';
+import { fetchGroundForStations, GisError } from '../gis/elevation';
 import { formatFt, formatStation } from '../lib/format';
 import EmptyState, { PanelSection } from './EmptyState';
 import GeBadge from './GeBadge';
+import Dep3Badge from './Dep3Badge';
 import SurveyBadge from './SurveyBadge';
 import ProfileChart from './ProfileChart';
 
@@ -81,8 +83,82 @@ function GroundInput({
 
 function SourceBadge({ source }: { source?: ElevSource }) {
   if (source === 'ge') return <GeBadge />;
+  if (source === '3dep') return <Dep3Badge />;
   if (source === 'survey') return <SurveyBadge />;
   return <span className="text-gray-400">—</span>;
+}
+
+/**
+ * One-click 3DEP fetch for the Ground elevations section. Sequential
+ * per-station queries with progress; a failing station is reported, not
+ * fatal. Successful values are tagged 3DEP-derived.
+ */
+function Fetch3depButton({ disabled }: { disabled?: boolean }) {
+  const { state, setStationsGround } = useProject();
+  const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState<[number, number] | null>(null);
+  const [failed, setFailed] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const run = async () => {
+    const stations = state.alignment?.stations;
+    if (!stations || stations.length === 0 || running) return;
+    setRunning(true);
+    setProgress([0, stations.length]);
+    setFailed([]);
+    setError(null);
+    try {
+      const results = await fetchGroundForStations(stations, (done, total) =>
+        setProgress([done, total]),
+      );
+      const ok = results.filter((r) => r.elevFt !== undefined);
+      if (ok.length > 0) {
+        setStationsGround(
+          ok.map((r) => ({ chainageFt: r.chainageFt, groundElevFt: r.elevFt! })),
+          '3dep',
+        );
+      }
+      const bad = results.filter((r) => r.elevFt === undefined);
+      setFailed(bad.map((r) => `${formatStation(r.chainageFt)}: ${r.error ?? 'unknown error'}`));
+      if (ok.length === 0) {
+        setError('3DEP fetch failed for every station — check the connection and retry.');
+      }
+    } catch (e) {
+      setError(e instanceof GisError ? e.message : String(e));
+    } finally {
+      setRunning(false);
+      setProgress(null);
+    }
+  };
+
+  return (
+    <div className="mb-2">
+      <button
+        type="button"
+        disabled={disabled || running}
+        onClick={run}
+        className="rounded bg-brand-600 px-2 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+        title="Query USGS 3DEP (~10 m DEM, NAVD88) for ground elevation at each station"
+      >
+        {running && progress
+          ? `Fetching 3DEP… ${progress[0]}/${progress[1]}`
+          : 'Fetch ground from 3DEP'}
+      </button>
+      {error && <p className="mt-1 text-[11px] font-medium text-red-700">{error}</p>}
+      {failed.length > 0 && !error && (
+        <details className="mt-1">
+          <summary className="cursor-pointer text-[11px] text-amber-800 underline">
+            {failed.length} station{failed.length === 1 ? '' : 's'} failed — enter by hand
+          </summary>
+          <ul className="num mt-1 max-h-24 overflow-y-auto text-[11px] text-gray-600">
+            {failed.map((f) => (
+              <li key={f}>{f}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
+  );
 }
 
 export default function ProfileTab() {
@@ -167,6 +243,7 @@ export default function ProfileTab() {
             No ground elevations yet — enter surveyed values below, then set the invert.
           </p>
         )}
+        <Fetch3depButton />
         <details className="mb-4">
           <summary className="cursor-pointer text-xs text-brand-700 underline">
             All stations — enter surveyed ground ({gStations.length})

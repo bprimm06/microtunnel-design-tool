@@ -3,7 +3,7 @@
 > The ONLY dynamic context file. Update at unit start and unit end. This is the
 > project's memory between sessions.
 
-## Status: U19 + U20 deployed 2026-09-22 — user approved
+## Status: U21 done, awaiting deploy approval — 2026-09-22
 Six context files + project AGENTS.md written. Build has not started.
 
 **Update 2026-09-22:** User has an existing self-built HTML version of the tool (engine
@@ -195,3 +195,15 @@ any new scaffolding. Awaiting the HTML file from the user.
   ownership line and a Legal notice button. Help modal gains the suggested
   legal notice; HTML report footer carries the ® mark and copyright.
   135/135 tests green; tsc/eslint/build clean. Awaiting deploy approval.
+- [x] **U21 — GIS ground elevations (USGS 3DEP):** done 2026-09-22 per
+  `specs/U21-gis-ground-spec.md`. Diagnosed the user's 0.0 ft report: GE
+  clamps drawn paths to terrain and exports altitude 0 on every vertex.
+  `buildStations` now detects all-zero KMZ altitudes, assigns no ground,
+  and warns (points at 3DEP fetch / surveyed entry) instead of silently
+  designing to 0.0 ft. New `src/gis/elevation.ts`: EPQS point queries
+  (NAVD88 feet, no key, CORS `*` — verified live), sequential per-station
+  fetch with progress + partial-failure reporting. New `3dep` ElevSource,
+  blue "3DEP-derived — field verify" badge (distinct from GE amber —
+  different datum), `SET_STATIONS_GROUND` context action, "Fetch ground
+  from 3DEP" button in the Profile tab Ground section, Help docs updated.
+  148/148 tests green; tsc/eslint/build clean. Awaiting deploy approval.
