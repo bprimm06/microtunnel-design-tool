@@ -146,8 +146,74 @@ export default function ProfileTab() {
   };
 
   if (editing || !profile) {
+    const gStations = alignment.stations;
+    const launch = gStations[0]!;
+    const reception = gStations[gStations.length - 1]!;
+    const hasAnyGround = gStations.some((s) => s.groundElevFt !== undefined);
     return (
       <div className="p-3">
+        <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+          Ground elevations
+        </h3>
+        <p className="num mb-2 text-xs text-gray-700">
+          Launch {formatStation(launch.chainageFt)}: <b>{formatFt(launch.groundElevFt)}</b>{' '}
+          <SourceBadge source={launch.elevSource} />
+          {' · '}Reception {formatStation(reception.chainageFt)}:{' '}
+          <b>{formatFt(reception.groundElevFt)}</b>{' '}
+          <SourceBadge source={reception.elevSource} />
+        </p>
+        {!hasAnyGround && (
+          <p className="mb-2 text-[11px] font-medium text-amber-800">
+            No ground elevations yet — enter surveyed values below, then set the invert.
+          </p>
+        )}
+        <details className="mb-4">
+          <summary className="cursor-pointer text-xs text-indigo-700 underline">
+            All stations — enter surveyed ground ({gStations.length})
+          </summary>
+          <div className="mt-1 max-h-48 overflow-y-auto">
+            <table className="w-full text-xs">
+              <thead className="sticky top-0 bg-white">
+                <tr className="text-left text-[11px] text-gray-500">
+                  <th className="py-1 pr-2">Station</th>
+                  <th className="py-1 pr-2 text-right">Ground (ft)</th>
+                  <th className="py-1 pr-2">Src</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gStations.map((s, i) => (
+                  <tr
+                    key={s.chainageFt}
+                    className={`border-t border-gray-100 ${
+                      i === 0 || i === gStations.length - 1 ? 'bg-indigo-50' : ''
+                    }`}
+                  >
+                    <td className="num py-0.5 pr-2">
+                      {formatStation(s.chainageFt)}
+                      {i === 0 && (
+                        <span className="ml-1 text-[10px] font-semibold text-indigo-700">launch</span>
+                      )}
+                      {i === gStations.length - 1 && gStations.length > 1 && (
+                        <span className="ml-1 text-[10px] font-semibold text-indigo-700">reception</span>
+                      )}
+                    </td>
+                    <td className="num py-0.5 pr-2 text-right">
+                      <GroundInput
+                        chainageFt={s.chainageFt}
+                        groundElevFt={s.groundElevFt}
+                        onCommit={setStationGround}
+                      />
+                    </td>
+                    <td className="py-0.5 pr-2">
+                      <SourceBadge source={s.elevSource} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+
         <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
           Invert control points
         </h3>

@@ -42,9 +42,11 @@ export function HelpBody() {
             for surveyed values.
           </Step>
           <Step n={2}>
-            <b>Build the profile.</b> Set invert control points and pipe OD, then build.
-            Ground elevations are editable at every station — typed values are flagged
-            user-entered, and <i>Restore GE ground</i> brings back the KMZ values.
+            <b>Build the profile.</b> Check ground at the launch and reception shafts
+            first — the editor shows both before you set the invert. Set invert control
+            points and pipe OD, then build. Ground elevations stay editable at every
+            station — typed values are flagged user-entered, and <i>Restore GE ground</i>{' '}
+            brings back the KMZ values.
           </Step>
           <Step n={3}>
             <b>Place borings.</b> Click the map; depth follows the +20 ft below-invert
