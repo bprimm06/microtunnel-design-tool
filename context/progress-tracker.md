@@ -3,7 +3,7 @@
 > The ONLY dynamic context file. Update at unit start and unit end. This is the
 > project's memory between sessions.
 
-## Status: U22 in progress — 2026-09-22
+## Status: U22 done, awaiting deploy approval — 2026-09-22
 Six context files + project AGENTS.md written. Build has not started.
 
 **Update 2026-09-22:** User has an existing self-built HTML version of the tool (engine
@@ -186,7 +186,7 @@ any new scaffolding. Awaiting the HTML file from the user.
   with editable ground (launch/reception rows highlighted) — so inverts are
   set against known ground. Empty-state hint when no ground exists; build is
   not blocked. Help modal step 2 documents the ground-first workflow.
-  135/135 tests green; tsc/eslint/build clean. Awaiting deploy approval.
+  135/135 tests green; tsc/eslint/build clean. Deployed 2026-09-22 (Pages run 35806991255, live bundle verified).
 - [x] **U20 — Branding, ownership & legal notice:** done 2026-09-22 per
   `specs/U20-branding-spec.md`. Brand palette from the original HTML
   (#1F4FA3/#183E85/#E8EEF8) applied across the interface (Tailwind v4
@@ -194,7 +194,7 @@ any new scaffolding. Awaiting the HTML file from the user.
   Tool®" + "Branako K. Primm, PE · © 2026 · v1.0.0". Footer bar with
   ownership line and a Legal notice button. Help modal gains the suggested
   legal notice; HTML report footer carries the ® mark and copyright.
-  135/135 tests green; tsc/eslint/build clean. Awaiting deploy approval.
+  135/135 tests green; tsc/eslint/build clean. Deployed 2026-09-22 (Pages run 35806991255, live bundle verified).
 - [x] **U21 — GIS ground elevations (USGS 3DEP):** done 2026-09-22 per
   `specs/U21-gis-ground-spec.md`. Diagnosed the user's 0.0 ft report: GE
   clamps drawn paths to terrain and exports altitude 0 on every vertex.
@@ -206,4 +206,26 @@ any new scaffolding. Awaiting the HTML file from the user.
   blue "3DEP-derived — field verify" badge (distinct from GE amber —
   different datum), `SET_STATIONS_GROUND` context action, "Fetch ground
   from 3DEP" button in the Profile tab Ground section, Help docs updated.
-  148/148 tests green; tsc/eslint/build clean. Awaiting deploy approval.
+  148/148 tests green; tsc/eslint/build clean. Deployed 2026-09-22 (commit 7168a1c, Pages run 35808051782, live bundle verified: 3DEP fetch + clamped-ground warning).
+- [x] **U22 — MTBM catalog + populated settlement assumptions:** done 2026-09-22 per
+  `specs/U22-mtbm-catalog-spec.md`. New `src/mtbm/catalog.ts`: 20 preselected
+  Herrenknecht AVN machines (AVN XC small 250–700, AVN XC standard 800–2000,
+  AVN 2400 class, AVN TC 1200–1800) with shield/pipe OD, torque, cutter speed,
+  rated power, steering, slurry-line, drive-length specs and Soft/Mixed/Hard-rock
+  cutting wheels (all from archived brochure tables — verify against manufacturer
+  data sheets). Selecting a machine autopopulates cutter OD, cutting wheel, and
+  a spec card flagged "Catalog-derived — verify with the manufacturer data
+  sheet"; manual cutter-OD edits are flagged against the catalog value; Custom /
+  manual entry preserves the old workflow. New `settlementAssumptions(c, r)`:
+  the Settlement results panel carries a populated Assumptions block (Peck
+  Gaussian/§13.5 method, excavated area from actual cutter OD, machine + wheel,
+  volume loss with segment overrides, trough K + computed i per segment with
+  override/kLibrary basis, settlement/slope limits, marginal factor, cover/z0
+  convention, catalog provenance) and the HTML report includes the MTBM in the
+  Drive summary plus the assumptions. 157/157 tests green; tsc/eslint/build
+  clean. Browser E2E verified 2026-09-22 on the dev server with a synthetic
+  KMZ (25/25 checks): AVN 1200 XC → cutter OD 50.98 in, spec card values,
+  wheel default Soft ground; engines ran; assumptions showed excavated area
+  14.18 ft², overcut annulus 50.13%, sta 0–968 K=0.50 (override) i=43.28 ft,
+  limits 1.00 in / 1:200, band 1/1.25, catalog provenance; report export
+  contains the MTBM line and assumptions. Awaiting deploy approval.
